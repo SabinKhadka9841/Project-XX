@@ -1,8 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { InviteLink } from "./invite-link";
 
-export default async function ProjectPage({
+export default async function JoinProjectPage({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -14,12 +13,12 @@ export default async function ProjectPage({
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect("/login");
+    redirect(`/login?next=/projects/${id}/join`);
   }
 
   const { data: project } = await supabase
     .from("projects")
-    .select("name")
+    .select("id")
     .eq("id", id)
     .single();
 
@@ -27,10 +26,14 @@ export default async function ProjectPage({
     notFound();
   }
 
-  return (
-    <main className="flex flex-1 flex-col items-center justify-center gap-4">
-      <h1 className="text-2xl font-semibold">{project.name}</h1>
-      <InviteLink projectId={id} />
-    </main>
-  );
+  const { error } = await supabase
+    .from("members")
+    .insert({ project_id: id, user_id: user.id });
+
+  // Error code 23505 = already a member. That's fine, just continue.
+  if (error && error.code !== "23505") {
+    throw new Error(error.message);
+  }
+
+  redirect(`/projects/${id}`);
 }
