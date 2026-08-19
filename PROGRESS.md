@@ -79,6 +79,8 @@ Because of that, **the app warns you before you'd erase somebody's work**: if a 
 
 **OnlyOffice runs in Docker, locally, separate from the Next.js app.** It needs to be running (`docker start onlyoffice-documentserver`) for the in-browser editor to work. If it's not running, "Open" on a file will fail — that's expected, not a bug to chase.
 
+**Tenancy groundwork is in.** Every table holding project data carries an `org_id`, kept correct by the database itself rather than by application code remembering to set it. There's no organisation concept yet and nothing uses it for isolation — the point is that adding the column while the tables are nearly empty is free, whereas doing it after a pilot means backfilling live data and rewriting every security policy at once. It's deliberately absent from the profiles table, since a person can be in projects belonging to different organisations and stamping one on them would be wrong rather than merely missing.
+
 **The database moved once already.** It started in Seoul, which made every single database call a ~200ms round trip from Australia. It's now in Sydney. If you're setting up your own `.env.local`, use the values in `.env.example` and pick a nearby region if you ever spin up your own Supabase project for testing.
 
 ---
