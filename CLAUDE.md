@@ -12,7 +12,7 @@ The developer on this project is a beginner. They have not built a Next.js app b
 - When the developer must do something outside the editor (create an account, copy an API key, run SQL in a dashboard), give exact click-by-click instructions.
 - Prefer boring, obvious code over clever code. This codebase will be read by someone learning.
 - After each working step, remind them to commit.
-- Keep the UI extremely plain until explicitly told otherwise. Function before appearance.
+- ~~Keep the UI extremely plain until explicitly told otherwise.~~ Superseded in August 2026: the developer asked for the app to look "more like a real app". Design tokens live in `src/app/globals.css` as roles (surface, border, accent) rather than colour names, with `.btn` / `.card` / `.field` / `.link` component classes. Match that system rather than inventing per-page styles, and check both light and dark. Function still comes first — but plain no longer means unstyled.
 
 ---
 
