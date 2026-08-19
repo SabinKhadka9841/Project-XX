@@ -40,6 +40,44 @@ export async function isSoloProject(
   return (await countMembers(supabase, projectId)) === 1;
 }
 
+export interface ExpectedTeammate {
+  id: string;
+  email: string;
+  hasJoined: boolean;
+}
+
+/**
+ * Who you're expecting, and whether they've turned up.
+ *
+ * Matched to actual members by email, case-insensitively. Someone who
+ * joins with a different address than the one noted down shows as still
+ * missing — which is a bit wrong but harmless, and far better than the
+ * alternative of making this list authoritative and locking them out.
+ */
+export async function listExpectedTeammates(
+  supabase: SupabaseClient,
+  projectId: string,
+  members: Member[],
+): Promise<ExpectedTeammate[]> {
+  const { data, error } = await supabase
+    .from("expected_teammates")
+    .select("id, email")
+    .eq("project_id", projectId)
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  const joined = new Set(members.map((member) => member.name.toLowerCase()));
+
+  return (data as { id: string; email: string }[]).map((row) => ({
+    id: row.id,
+    email: row.email,
+    hasJoined: joined.has(row.email.toLowerCase()),
+  }));
+}
+
 export async function listMembers(
   supabase: SupabaseClient,
   projectId: string,

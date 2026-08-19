@@ -6,7 +6,10 @@ import {
   listBranches,
 } from "@/modules/projects/branches";
 import { listChangeRequests } from "@/modules/change-requests";
-import { listMembers } from "@/modules/projects/members";
+import {
+  listExpectedTeammates,
+  listMembers,
+} from "@/modules/projects/members";
 import { PeoplePanel } from "./people-panel";
 import { getProject } from "@/modules/projects/projects";
 import { DeadlinePanel } from "./deadline-panel";
@@ -62,7 +65,12 @@ export default async function ProjectPage({
   }
 
   const copies = branches.filter((branch) => !branch.isFinal);
-  const files = await listBranchFilesWithUrls(supabase, id, final.id);
+  const [files, expected] = await Promise.all([
+    listBranchFilesWithUrls(supabase, id, final.id),
+    // Needs the member list to work out who's turned up, so it can't
+    // join the batch above.
+    listExpectedTeammates(supabase, id, members),
+  ]);
 
   const pending = changeRequests.filter(
     (request) => request.status === "pending",
@@ -160,6 +168,7 @@ export default async function ProjectPage({
         projectId={id}
         projectName={project.name}
         members={members}
+        expected={expected}
         currentUserId={user.id}
       />
 

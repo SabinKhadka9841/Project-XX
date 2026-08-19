@@ -1,4 +1,5 @@
-import type { Member } from "@/modules/projects/members";
+import type { ExpectedTeammate, Member } from "@/modules/projects/members";
+import { ExpectedTeammates } from "./expected-teammates";
 import { InviteLink } from "./invite-link";
 
 /**
@@ -13,11 +14,13 @@ export function PeoplePanel({
   projectId,
   projectName,
   members,
+  expected,
   currentUserId,
 }: {
   projectId: string;
   projectName: string;
   members: Member[];
+  expected: ExpectedTeammate[];
   currentUserId: string;
 }) {
   return (
@@ -43,13 +46,22 @@ export function PeoplePanel({
         ))}
       </ul>
 
-      {members.length === 1 && (
+      {members.length === 1 && expected.length === 0 && (
         <p className="text-sm text-zinc-600">
           You&apos;re the only one here so far. Send the invite to your
           group — anyone who hasn&apos;t joined can&apos;t see the work, and
           won&apos;t show up in the record of who did what.
         </p>
       )}
+
+      <div className="border-t pt-3">
+        <h3 className="mb-2 text-sm font-medium">Who you&apos;re expecting</h3>
+        <ExpectedTeammates
+          projectId={projectId}
+          projectName={projectName}
+          expected={expected}
+        />
+      </div>
     </section>
   );
 }

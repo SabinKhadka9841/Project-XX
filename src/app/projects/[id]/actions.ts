@@ -182,3 +182,58 @@ export async function updateDeadline(
 
   revalidatePath(`/projects/${projectId}`);
 }
+
+/**
+ * Note down someone you're expecting to join, so you can tell at a
+ * glance who still hasn't. Purely a checklist — it grants no access.
+ */
+export async function addExpectedTeammate(
+  projectId: string,
+  formData: FormData,
+): Promise<{ error: string } | void> {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  const raw = formData.get("email");
+  const email = typeof raw === "string" ? raw.trim().toLowerCase() : "";
+
+  if (!email || !email.includes("@")) {
+    return { error: "That doesn't look like an email address." };
+  }
+
+  const { error } = await supabase
+    .from("expected_teammates")
+    .insert({ project_id: projectId, email, added_by: user.id });
+
+  // Already on the list. Nothing to do, and not worth an error.
+  if (error && error.code !== "23505") {
+    return { error: error.message };
+  }
+
+  revalidatePath(`/projects/${projectId}`);
+}
+
+export async function removeExpectedTeammate(
+  projectId: string,
+  expectedId: string,
+): Promise<void> {
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("expected_teammates")
+    .delete()
+    .eq("id", expectedId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath(`/projects/${projectId}`);
+}
