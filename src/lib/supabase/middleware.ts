@@ -29,9 +29,22 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user && request.nextUrl.pathname.startsWith("/projects")) {
+  const { pathname } = request.nextUrl;
+
+  // Invite links are the one thing under /projects a signed-out person
+  // is *supposed* to reach: that page shows what they've been invited
+  // to and signs them in on the spot. Bouncing them to a bare login
+  // screen first was throwing away the context that makes them join at
+  // all. The page itself still requires sign-in before touching
+  // anything — it only reveals the project's name.
+  const isInviteLink = /^\/projects\/[^/]+\/join\/?$/.test(pathname);
+
+  if (!user && pathname.startsWith("/projects") && !isInviteLink) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
+    // Come back here once they're signed in, instead of dumping them on
+    // a generic list and making them find their way.
+    url.searchParams.set("next", pathname);
     return NextResponse.redirect(url);
   }
 

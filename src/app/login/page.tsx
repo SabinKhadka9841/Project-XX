@@ -1,76 +1,27 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
+import { SignInForm } from "./sign-in-form";
 
-export default function LoginPage() {
+function LoginContent() {
   const searchParams = useSearchParams();
   const rawNext = searchParams.get("next");
+  // Only ever redirect somewhere inside this app.
   const next = rawNext && rawNext.startsWith("/") ? rawNext : "/projects";
 
-  const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">(
-    "idle",
-  );
-  const [error, setError] = useState("");
-
-  async function handleSubmit(event: FormEvent) {
-    event.preventDefault();
-    setStatus("sending");
-    setError("");
-
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/confirm?next=${encodeURIComponent(next)}`,
-      },
-    });
-
-    if (error) {
-      setStatus("error");
-      setError(error.message);
-      return;
-    }
-
-    setStatus("sent");
-  }
-
-  if (status === "sent") {
-    return (
-      <main className="flex flex-1 items-center justify-center">
-        <p>Check your email for a sign-in link.</p>
-      </main>
-    );
-  }
-
   return (
-    <main className="flex flex-1 items-center justify-center">
-      <form
-        onSubmit={handleSubmit}
-        className="flex w-full max-w-xs flex-col gap-4"
-      >
-        <h1 className="text-xl font-semibold">Sign in to Project Vault</h1>
-        <input
-          type="email"
-          required
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          placeholder="you@example.com"
-          className="rounded border px-3 py-2"
-        />
-        <button
-          type="submit"
-          disabled={status === "sending"}
-          className="rounded bg-black px-3 py-2 text-white disabled:opacity-50"
-        >
-          {status === "sending" ? "Sending..." : "Email me a sign-in link"}
-        </button>
-        {status === "error" && (
-          <p className="text-sm text-red-600">{error}</p>
-        )}
-      </form>
+    <main className="mx-auto flex w-full max-w-xs flex-1 flex-col justify-center gap-4 px-4">
+      <h1 className="text-xl font-semibold">Sign in to Project Vault</h1>
+      <SignInForm next={next} />
     </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginContent />
+    </Suspense>
   );
 }

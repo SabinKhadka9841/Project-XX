@@ -23,10 +23,13 @@ function isEditable(filename: string) {
 
 export default async function ProjectPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ joined?: string }>;
 }) {
   const { id } = await params;
+  const { joined } = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
@@ -79,9 +82,20 @@ export default async function ProjectPage({
           >
             Who did what
           </Link>
-          <InviteLink projectId={id} />
+          <InviteLink projectId={id} projectName={project.name} />
         </div>
       </div>
+
+      {joined === "1" && (
+        <div className="rounded border border-zinc-300 bg-zinc-50 p-4 text-sm">
+          <p className="font-medium">You&apos;re in.</p>
+          <p className="mt-1 text-zinc-600">
+            To change anything, make your own copy — you can edit it freely
+            without touching the final. When you&apos;re happy, ask a
+            teammate to add it in.
+          </p>
+        </div>
+      )}
 
       <section className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
