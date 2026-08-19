@@ -7,7 +7,14 @@
 // reaching into their tables directly.
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { getBranch, getFinalBranch } from "@/modules/projects/branches";
+import {
+  branchFolder,
+  getBranch,
+  getFinalBranch,
+  listBranchFiles,
+} from "@/modules/projects/branches";
+
+const BUCKET = "project-files";
 
 export type ChangeRequestStatus = "pending" | "approved" | "rejected";
 
@@ -19,6 +26,8 @@ export interface ChangeRequest {
   authorId: string | null;
   message: string | null;
   status: ChangeRequestStatus;
+  reviewedBy: string | null;
+  reviewedAt: string | null;
   createdAt: string;
 }
 
@@ -30,11 +39,13 @@ interface ChangeRequestRow {
   author_id: string | null;
   message: string | null;
   status: ChangeRequestStatus;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
   created_at: string;
 }
 
 const COLUMNS =
-  "id, project_id, source_branch_id, target_branch_id, author_id, message, status, created_at";
+  "id, project_id, source_branch_id, target_branch_id, author_id, message, status, reviewed_by, reviewed_at, created_at";
 
 function toChangeRequest(row: ChangeRequestRow): ChangeRequest {
   return {
@@ -45,6 +56,8 @@ function toChangeRequest(row: ChangeRequestRow): ChangeRequest {
     authorId: row.author_id,
     message: row.message,
     status: row.status,
+    reviewedBy: row.reviewed_by,
+    reviewedAt: row.reviewed_at,
     createdAt: row.created_at,
   };
 }
@@ -64,6 +77,23 @@ export async function listChangeRequests(
   }
 
   return (data as ChangeRequestRow[]).map(toChangeRequest);
+}
+
+export async function getChangeRequest(
+  supabase: SupabaseClient,
+  changeRequestId: string,
+): Promise<ChangeRequest | null> {
+  const { data, error } = await supabase
+    .from("change_requests")
+    .select(COLUMNS)
+    .eq("id", changeRequestId)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data ? toChangeRequest(data as ChangeRequestRow) : null;
 }
 
 /** The still-waiting request for a copy, if there is one. */
@@ -158,6 +188,133 @@ export async function createChangeRequest(
       );
     }
     throw new Error(error.message);
+  }
+
+  return toChangeRequest(data as ChangeRequestRow);
+}
+
+/**
+ * Approve a change request: the copy's files replace the final's, and
+ * only then does the status flip.
+ *
+ * Whole-file replace, on purpose — no diffing or merging. Every file in
+ * the copy overwrites the same-named file in the final. A copy starts
+ * as a full duplicate of the final, so this naturally carries over
+ * everything; nothing is deleted from the final by an approval.
+ */
+export async function approveChangeRequest(
+  supabase: SupabaseClient,
+  {
+    changeRequestId,
+    reviewerId,
+  }: { changeRequestId: string; reviewerId: string },
+): Promise<ChangeRequest> {
+  const request = await getChangeRequest(supabase, changeRequestId);
+
+  if (!request) {
+    throw new ChangeRequestError("That request no longer exists.");
+  }
+
+  if (request.status !== "pending") {
+    throw new ChangeRequestError("This has already been decided.");
+  }
+
+  if (request.authorId === reviewerId) {
+    throw new ChangeRequestError(
+      "You can't approve your own copy — ask a teammate to look at it.",
+    );
+  }
+
+  const files = await listBranchFiles(
+    supabase,
+    request.projectId,
+    request.sourceBranchId,
+  );
+  const sourceFolder = branchFolder(request.projectId, request.sourceBranchId);
+  const targetFolder = branchFolder(request.projectId, request.targetBranchId);
+
+  for (const file of files) {
+    const { data: blob, error: downloadError } = await supabase.storage
+      .from(BUCKET)
+      .download(`${sourceFolder}/${file.name}`);
+
+    if (downloadError || !blob) {
+      throw new Error(
+        downloadError?.message ?? `Couldn't read ${file.name} from the copy.`,
+      );
+    }
+
+    const { error: uploadError } = await supabase.storage
+      .from(BUCKET)
+      .upload(`${targetFolder}/${file.name}`, blob, { upsert: true });
+
+    if (uploadError) {
+      throw new Error(uploadError.message);
+    }
+  }
+
+  // The status check here (not just the id) matters: it stops two
+  // people clicking "approve" at nearly the same moment from both
+  // succeeding and copying files twice.
+  const { data, error } = await supabase
+    .from("change_requests")
+    .update({
+      status: "approved",
+      reviewed_by: reviewerId,
+      reviewed_at: new Date().toISOString(),
+    })
+    .eq("id", changeRequestId)
+    .eq("status", "pending")
+    .select(COLUMNS)
+    .single();
+
+  if (error || !data) {
+    throw new Error(
+      error?.message ??
+        "The files copied across, but the request couldn't be marked approved. Refresh and check before trying again.",
+    );
+  }
+
+  return toChangeRequest(data as ChangeRequestRow);
+}
+
+export async function rejectChangeRequest(
+  supabase: SupabaseClient,
+  {
+    changeRequestId,
+    reviewerId,
+  }: { changeRequestId: string; reviewerId: string },
+): Promise<ChangeRequest> {
+  const request = await getChangeRequest(supabase, changeRequestId);
+
+  if (!request) {
+    throw new ChangeRequestError("That request no longer exists.");
+  }
+
+  if (request.status !== "pending") {
+    throw new ChangeRequestError("This has already been decided.");
+  }
+
+  if (request.authorId === reviewerId) {
+    throw new ChangeRequestError(
+      "You can't reject your own request — a teammate needs to decide.",
+    );
+  }
+
+  const { data, error } = await supabase
+    .from("change_requests")
+    .update({
+      status: "rejected",
+      reviewed_by: reviewerId,
+      reviewed_at: new Date().toISOString(),
+    })
+    .eq("id", changeRequestId)
+    .eq("status", "pending")
+    .select(COLUMNS)
+    .single();
+
+  if (error || !data) {
+    throw new Error(error?.message ?? "Couldn't reject this request.");
   }
 
   return toChangeRequest(data as ChangeRequestRow);

@@ -131,11 +131,17 @@ yet).
 ## Change requests: "ask to add this in"
 
 A change request says "please put my copy's files into the final".
-**Nothing moves when one is created** — the files only change when
-somebody approves it, and approving isn't built yet.
+**Nothing moves when one is created** — files only change on approval.
 
 Call it "ask to add this in" in the UI, never merge/pull request. A
-pending one reads as "waiting for someone to say yes".
+pending one reads as "waiting for someone to say yes". Approve reads
+as "add it in"; reject reads as "say no".
+
+**The person who authored a request can't decide it.** Approve/reject
+buttons should only render for someone who isn't the `authorId` — the
+API also enforces this (409) and so does the database (RLS), so this
+isn't just a UI nicety, but hiding the buttons up front is still worth
+doing so people aren't clicking something that's guaranteed to fail.
 
 ### `GET /api/projects/:id/change-requests`
 
@@ -150,12 +156,33 @@ Newest first, every status. Filter for `"pending"` client-side.
   "authorId": string | null,  // null if that account was deleted
   "message": string | null,
   "status": "pending" | "approved" | "rejected",
+  "reviewedBy": string | null,  // who approved/rejected; null while pending
+  "reviewedAt": string | null,  // null while pending
   "createdAt": string
 }]
 ```
 
-Everything will be `"pending"` for now — nothing can move off that
-status until approve/reject exists.
+### `PATCH /api/projects/:id/change-requests/:changeRequestId`
+
+Approve or reject a pending request.
+
+Request body: `{ "decision": "approve" | "reject" }`
+
+```
+200 { same shape as above, status/reviewedBy/reviewedAt updated }
+400 { "error": "..." }              // decision missing or invalid
+409 { "error": "<a readable reason>" }
+```
+
+Approving actually copies every file from the copy onto the final —
+**whole-file replace, no merging**, matching the "no sophisticated
+merging in v1" rule. A file the final has that the copy doesn't (not
+possible right now, since a copy starts as a full duplicate) would be
+left alone, not deleted.
+
+The 409 cases, each with a message meant to be shown directly:
+- the request was already decided
+- the signed-in person is the request's own author
 
 ### `POST /api/projects/:id/change-requests`
 
@@ -196,17 +223,15 @@ back to that version automatically.
 Note this needs OnlyOffice's Document Server running in Docker
 locally. See `.env.example` for the one-line command.
 
+## Core loop status
+
+Copy → propose → approve is **done end to end** as of this update:
+copying a project, asking for a copy to be added in, and a teammate
+approving or rejecting it all work, verified in the browser with two
+real accounts.
+
 ## Not built yet
 
-**Approving or rejecting** a change request. You can raise one and see
-it sitting there pending, but nothing can act on it, so no copy's
-changes can actually reach the final yet. That's the next piece being
-built, and it's the last step of the core loop.
-
-**Activity / the contribution timeline** doesn't exist either. It
-falls out of change requests once approvals are recorded, so it comes
-after.
-
-You can safely build the "waiting for someone to say yes" list now.
-Don't build approve/reject buttons against real calls until this doc
-says those endpoints exist.
+**Activity / the contribution timeline** doesn't exist yet. It falls
+out of change requests now that approvals are recorded (who authored
+it, who reviewed it), so it's the next thing to build, not a redesign.

@@ -10,7 +10,9 @@ import {
 } from "@/modules/projects/branches";
 import {
   ChangeRequestError,
+  approveChangeRequest,
   createChangeRequest,
+  rejectChangeRequest,
 } from "@/modules/change-requests";
 
 export async function uploadFile(
@@ -103,4 +105,46 @@ export async function askToAddThisIn(
 
   revalidatePath(`/projects/${projectId}`);
   revalidatePath(`/projects/${projectId}/copies/${copyId}`);
+}
+
+/**
+ * Same "return the error, don't throw" shape as askToAddThisIn — every
+ * failure here is something the reviewer can understand ("you can't
+ * approve your own copy"), not a crash.
+ */
+export async function decideChangeRequest(
+  projectId: string,
+  changeRequestId: string,
+  decision: "approve" | "reject",
+): Promise<{ error: string } | void> {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  try {
+    if (decision === "approve") {
+      await approveChangeRequest(supabase, {
+        changeRequestId,
+        reviewerId: user.id,
+      });
+    } else {
+      await rejectChangeRequest(supabase, {
+        changeRequestId,
+        reviewerId: user.id,
+      });
+    }
+  } catch (error) {
+    if (error instanceof ChangeRequestError) {
+      return { error: error.message };
+    }
+    throw error;
+  }
+
+  revalidatePath(`/projects/${projectId}`);
 }

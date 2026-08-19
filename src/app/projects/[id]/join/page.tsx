@@ -16,23 +16,24 @@ export default async function JoinProjectPage({
     redirect(`/login?next=/projects/${id}/join`);
   }
 
-  const { data: project } = await supabase
-    .from("projects")
-    .select("id")
-    .eq("id", id)
-    .single();
-
-  if (!project) {
-    notFound();
-  }
-
+  // No separate "does this project exist" check: the members table's
+  // SELECT policy only lets members see a project, and a brand-new
+  // joiner isn't one yet — checking first always found nothing and
+  // sent every genuine new member to a false 404. The insert's own
+  // foreign key catches a bad id just as well.
   const { error } = await supabase
     .from("members")
     .insert({ project_id: id, user_id: user.id });
 
-  // Error code 23505 = already a member. That's fine, just continue.
-  if (error && error.code !== "23505") {
-    throw new Error(error.message);
+  if (error) {
+    if (error.code === "23505") {
+      // Already a member. Fine, just continue.
+    } else if (error.code === "23503") {
+      // No project with this id.
+      notFound();
+    } else {
+      throw new Error(error.message);
+    }
   }
 
   redirect(`/projects/${id}`);

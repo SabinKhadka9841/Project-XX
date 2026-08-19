@@ -6,6 +6,7 @@ import {
   listBranches,
 } from "@/modules/projects/branches";
 import { listChangeRequests } from "@/modules/change-requests";
+import { DecideButtons } from "./decide-buttons";
 import { InviteLink } from "./invite-link";
 import { MakeCopyButton } from "./make-copy-button";
 import { uploadFile } from "./actions";
@@ -118,16 +119,28 @@ export default async function ProjectPage({
             Nothing is waiting to be added in.
           </p>
         ) : (
-          <ul className="flex flex-col gap-1">
+          <ul className="flex flex-col gap-2">
             {pending.map((request) => (
-              <li key={request.id} className="text-sm">
-                <Link
-                  href={`/projects/${id}/copies/${request.sourceBranchId}`}
-                  className="underline"
-                >
-                  {branchNameById.get(request.sourceBranchId) ?? "A copy"}
-                </Link>{" "}
-                <span className="text-zinc-600">wants to be added in</span>
+              <li
+                key={request.id}
+                className="flex items-center justify-between gap-3 text-sm"
+              >
+                <span>
+                  <Link
+                    href={`/projects/${id}/copies/${request.sourceBranchId}`}
+                    className="underline"
+                  >
+                    {branchNameById.get(request.sourceBranchId) ?? "A copy"}
+                  </Link>{" "}
+                  <span className="text-zinc-600">wants to be added in</span>
+                </span>
+                {request.authorId === user.id ? (
+                  <span className="shrink-0 text-xs text-zinc-500">
+                    Waiting on a teammate
+                  </span>
+                ) : (
+                  <DecideButtons projectId={id} changeRequestId={request.id} />
+                )}
               </li>
             ))}
           </ul>
