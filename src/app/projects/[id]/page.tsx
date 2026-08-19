@@ -6,6 +6,7 @@ import {
   listBranches,
 } from "@/modules/projects/branches";
 import { listChangeRequests } from "@/modules/change-requests";
+import { countMembers } from "@/modules/projects/members";
 import { DecideButtons } from "./decide-buttons";
 import { InviteLink } from "./invite-link";
 import { MakeCopyButton } from "./make-copy-button";
@@ -36,11 +37,17 @@ export default async function ProjectPage({
   // Supabase is in a different region, so each call is a slow round trip.
   // These two don't depend on each other, so ask for them at the same
   // time instead of waiting for one before starting the other.
-  const [{ data: project }, branches, changeRequests] = await Promise.all([
-    supabase.from("projects").select("name").eq("id", id).single(),
-    listBranches(supabase, id),
-    listChangeRequests(supabase, id),
-  ]);
+  const [{ data: project }, branches, changeRequests, memberCount] =
+    await Promise.all([
+      supabase.from("projects").select("name").eq("id", id).single(),
+      listBranches(supabase, id),
+      listChangeRequests(supabase, id),
+      countMembers(supabase, id),
+    ]);
+
+  // On your own there's nobody to ask, so you decide your own requests
+  // — otherwise a solo project could never change its final at all.
+  const isSolo = memberCount === 1;
 
   // listBranches already returned every version, so pick the final one
   // out of it rather than asking the database a second time.
@@ -142,7 +149,7 @@ export default async function ProjectPage({
                   </Link>{" "}
                   <span className="text-zinc-600">wants to be added in</span>
                 </span>
-                {request.authorId === user.id ? (
+                {request.authorId === user.id && !isSolo ? (
                   <span className="shrink-0 text-xs text-zinc-500">
                     Waiting on a teammate
                   </span>

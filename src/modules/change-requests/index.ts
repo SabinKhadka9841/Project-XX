@@ -13,6 +13,7 @@ import {
   getFinalBranch,
   listBranchFiles,
 } from "@/modules/projects/branches";
+import { isSoloProject } from "@/modules/projects/members";
 
 const BUCKET = "project-files";
 
@@ -219,7 +220,13 @@ export async function approveChangeRequest(
     throw new ChangeRequestError("This has already been decided.");
   }
 
-  if (request.authorId === reviewerId) {
+  // Working alone, there's nobody to ask, so approving your own is the
+  // only way the final can ever change. The timeline still records
+  // honestly that you did both halves.
+  if (
+    request.authorId === reviewerId &&
+    !(await isSoloProject(supabase, request.projectId))
+  ) {
     throw new ChangeRequestError(
       "You can't approve your own copy — ask a teammate to look at it.",
     );
@@ -295,7 +302,10 @@ export async function rejectChangeRequest(
     throw new ChangeRequestError("This has already been decided.");
   }
 
-  if (request.authorId === reviewerId) {
+  if (
+    request.authorId === reviewerId &&
+    !(await isSoloProject(supabase, request.projectId))
+  ) {
     throw new ChangeRequestError(
       "You can't reject your own request — a teammate needs to decide.",
     );

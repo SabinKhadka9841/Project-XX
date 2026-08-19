@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createFinalBranch } from "@/modules/projects/branches";
 import type {
   ApiError,
   CreateProjectRequest,
@@ -93,6 +94,12 @@ export async function POST(request: Request) {
       { status: 500 },
     );
   }
+
+  // Every project needs its protected final version, or it can hold no
+  // files and no copies can be made from it. Created after the member
+  // row above, because the policy that allows creating a version
+  // requires you to already be a member.
+  await createFinalBranch(supabase, projectId, user.id);
 
   return NextResponse.json<CreateProjectResponse>(
     { id: projectId, name, createdAt: new Date().toISOString() },

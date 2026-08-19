@@ -6,6 +6,7 @@ import {
   listBranchFilesWithUrls,
 } from "@/modules/projects/branches";
 import { getPendingRequestForBranch } from "@/modules/change-requests";
+import { countMembers } from "@/modules/projects/members";
 import { uploadFile } from "../../actions";
 import { AskButton } from "./ask-button";
 
@@ -43,10 +44,13 @@ export default async function CopyPage({
     notFound();
   }
 
-  const [files, pendingRequest] = await Promise.all([
+  const [files, pendingRequest, memberCount] = await Promise.all([
     listBranchFilesWithUrls(supabase, id, copy.id),
     getPendingRequestForBranch(supabase, copy.id),
+    countMembers(supabase, id),
   ]);
+
+  const isSolo = memberCount === 1;
 
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-6 px-4 py-16">
@@ -101,14 +105,28 @@ export default async function CopyPage({
       <div className="border-t pt-6">
         {pendingRequest ? (
           <p className="text-sm text-zinc-600">
-            You&apos;ve asked for this to be added in. Waiting for a teammate
-            to say yes.
+            {isSolo ? (
+              <>
+                Ready to go in. You&apos;re the only person on this project,
+                so add it in yourself from the{" "}
+                <Link href={`/projects/${id}`} className="underline">
+                  project page
+                </Link>
+                .
+              </>
+            ) : (
+              <>
+                You&apos;ve asked for this to be added in. Waiting for a
+                teammate to say yes.
+              </>
+            )}
           </p>
         ) : (
           <div className="flex flex-col gap-2">
             <p className="text-sm text-zinc-600">
-              Happy with these changes? Ask a teammate to add them into the
-              final.
+              {isSolo
+                ? "Happy with these changes? Mark them ready, then add them into the final yourself."
+                : "Happy with these changes? Ask a teammate to add them into the final."}
             </p>
             <AskButton projectId={id} copyId={copy.id} />
           </div>
