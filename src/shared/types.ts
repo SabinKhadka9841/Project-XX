@@ -139,6 +139,18 @@ export interface DecideChangeRequestRequest {
 }
 export type DecideChangeRequestResponse = ChangeRequest;
 
+// ── People in a project ──────────────────────────────────
+
+export interface Member {
+  userId: string;
+  role: string; // "owner" for whoever created it, otherwise "member"
+  name: string; // email, or a fallback if the account is gone
+}
+
+// GET /api/projects/:id/members
+// Only visible to people already in the project.
+export type ListMembersResponse = Member[];
+
 // ── Contribution timeline ────────────────────────────────
 //
 // A chronological record of who did what. Present it as a plain list,

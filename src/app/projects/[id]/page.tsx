@@ -6,11 +6,11 @@ import {
   listBranches,
 } from "@/modules/projects/branches";
 import { listChangeRequests } from "@/modules/change-requests";
-import { countMembers } from "@/modules/projects/members";
+import { listMembers } from "@/modules/projects/members";
+import { PeoplePanel } from "./people-panel";
 import { getProject } from "@/modules/projects/projects";
 import { DeadlinePanel } from "./deadline-panel";
 import { DecideButtons } from "./decide-buttons";
-import { InviteLink } from "./invite-link";
 import { MakeCopyButton } from "./make-copy-button";
 import { uploadFile } from "./actions";
 
@@ -42,16 +42,16 @@ export default async function ProjectPage({
   // Supabase is in a different region, so each call is a slow round trip.
   // These two don't depend on each other, so ask for them at the same
   // time instead of waiting for one before starting the other.
-  const [project, branches, changeRequests, memberCount] = await Promise.all([
+  const [project, branches, changeRequests, members] = await Promise.all([
     getProject(supabase, id),
     listBranches(supabase, id),
     listChangeRequests(supabase, id),
-    countMembers(supabase, id),
+    listMembers(supabase, id),
   ]);
 
   // On your own there's nobody to ask, so you decide your own requests
   // — otherwise a solo project could never change its final at all.
-  const isSolo = memberCount === 1;
+  const isSolo = members.length === 1;
 
   // listBranches already returned every version, so pick the final one
   // out of it rather than asking the database a second time.
@@ -75,15 +75,9 @@ export default async function ProjectPage({
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-8 px-4 py-16">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">{project.name}</h1>
-        <div className="flex items-center gap-3">
-          <Link
-            href={`/projects/${id}/timeline`}
-            className="text-sm underline"
-          >
-            Who did what
-          </Link>
-          <InviteLink projectId={id} projectName={project.name} />
-        </div>
+        <Link href={`/projects/${id}/timeline`} className="text-sm underline">
+          Who did what
+        </Link>
       </div>
 
       {joined === "1" && (
@@ -161,6 +155,13 @@ export default async function ProjectPage({
           </form>
         )}
       </section>
+
+      <PeoplePanel
+        projectId={id}
+        projectName={project.name}
+        members={members}
+        currentUserId={user.id}
+      />
 
       <DeadlinePanel
         projectId={id}
