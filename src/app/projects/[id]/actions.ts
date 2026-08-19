@@ -8,6 +8,10 @@ import {
   copyBranch,
   getFinalBranch,
 } from "@/modules/projects/branches";
+import {
+  ChangeRequestError,
+  createChangeRequest,
+} from "@/modules/change-requests";
 
 export async function uploadFile(
   projectId: string,
@@ -61,4 +65,42 @@ export async function makeCopy(projectId: string) {
   );
 
   redirect(`/projects/${projectId}/copies/${copy.id}`);
+}
+
+/**
+ * Returns an error message rather than throwing, so the button can show
+ * it. Everything here is something the person can act on ("you already
+ * asked"), not a crash.
+ */
+export async function askToAddThisIn(
+  projectId: string,
+  copyId: string,
+  message: string | null,
+): Promise<{ error: string } | void> {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  try {
+    await createChangeRequest(supabase, {
+      projectId,
+      sourceBranchId: copyId,
+      authorId: user.id,
+      message,
+    });
+  } catch (error) {
+    if (error instanceof ChangeRequestError) {
+      return { error: error.message };
+    }
+    throw error;
+  }
+
+  revalidatePath(`/projects/${projectId}`);
+  revalidatePath(`/projects/${projectId}/copies/${copyId}`);
 }

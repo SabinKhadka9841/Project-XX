@@ -128,6 +128,54 @@ yet).
 404 { "error": "Not found" }
 ```
 
+## Change requests: "ask to add this in"
+
+A change request says "please put my copy's files into the final".
+**Nothing moves when one is created** — the files only change when
+somebody approves it, and approving isn't built yet.
+
+Call it "ask to add this in" in the UI, never merge/pull request. A
+pending one reads as "waiting for someone to say yes".
+
+### `GET /api/projects/:id/change-requests`
+
+Newest first, every status. Filter for `"pending"` client-side.
+
+```
+200 [{
+  "id": string,
+  "projectId": string,
+  "sourceBranchId": string,   // the copy the changes come from
+  "targetBranchId": string,   // always the final, for now
+  "authorId": string | null,  // null if that account was deleted
+  "message": string | null,
+  "status": "pending" | "approved" | "rejected",
+  "createdAt": string
+}]
+```
+
+Everything will be `"pending"` for now — nothing can move off that
+status until approve/reject exists.
+
+### `POST /api/projects/:id/change-requests`
+
+Request body: `{ "sourceBranchId": string, "message"?: string | null }`
+
+```
+201 { same shape as above }
+400 { "error": "sourceBranchId is required" }
+409 { "error": "<a readable reason>" }
+```
+
+The **409** is the interesting one — it means the person did something
+they can fix, and the `error` string is written to be shown to them
+directly. Three cases:
+
+- already asked for this copy, and it's still waiting
+- the id given is the final version (you can't add the final into
+  itself — ask from a copy)
+- the id belongs to a different project
+
 ## Joining a project (not a JSON endpoint)
 
 Invite links are plain page navigations, not something to `fetch()`:
@@ -150,10 +198,15 @@ locally. See `.env.example` for the one-line command.
 
 ## Not built yet
 
-**Change requests** ("ask to add this in" / approve / reject) and
-**activity** do not exist yet. Copies can be made and edited, but
-there is currently no way to get changes from a copy back into the
-final — that's the next thing being built.
+**Approving or rejecting** a change request. You can raise one and see
+it sitting there pending, but nothing can act on it, so no copy's
+changes can actually reach the final yet. That's the next piece being
+built, and it's the last step of the core loop.
 
-Don't wire the frontend's propose/approve UI to real calls until this
-doc says those endpoints exist.
+**Activity / the contribution timeline** doesn't exist either. It
+falls out of change requests once approvals are recorded, so it comes
+after.
+
+You can safely build the "waiting for someone to say yes" list now.
+Don't build approve/reject buttons against real calls until this doc
+says those endpoints exist.

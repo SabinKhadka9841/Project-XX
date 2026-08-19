@@ -5,7 +5,9 @@ import {
   getBranch,
   listBranchFilesWithUrls,
 } from "@/modules/projects/branches";
+import { getPendingRequestForBranch } from "@/modules/change-requests";
 import { uploadFile } from "../../actions";
+import { AskButton } from "./ask-button";
 
 const EDITABLE_EXTENSIONS = ["doc", "docx", "xls", "xlsx", "ppt", "pptx"];
 
@@ -41,7 +43,10 @@ export default async function CopyPage({
     notFound();
   }
 
-  const files = await listBranchFilesWithUrls(supabase, id, copy.id);
+  const [files, pendingRequest] = await Promise.all([
+    listBranchFilesWithUrls(supabase, id, copy.id),
+    getPendingRequestForBranch(supabase, copy.id),
+  ]);
 
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-6 px-4 py-16">
@@ -92,6 +97,23 @@ export default async function CopyPage({
           Upload
         </button>
       </form>
+
+      <div className="border-t pt-6">
+        {pendingRequest ? (
+          <p className="text-sm text-zinc-600">
+            You&apos;ve asked for this to be added in. Waiting for a teammate
+            to say yes.
+          </p>
+        ) : (
+          <div className="flex flex-col gap-2">
+            <p className="text-sm text-zinc-600">
+              Happy with these changes? Ask a teammate to add them into the
+              final.
+            </p>
+            <AskButton projectId={id} copyId={copy.id} />
+          </div>
+        )}
+      </div>
     </main>
   );
 }

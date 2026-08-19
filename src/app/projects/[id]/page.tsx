@@ -5,6 +5,7 @@ import {
   listBranchFilesWithUrls,
   listBranches,
 } from "@/modules/projects/branches";
+import { listChangeRequests } from "@/modules/change-requests";
 import { InviteLink } from "./invite-link";
 import { MakeCopyButton } from "./make-copy-button";
 import { uploadFile } from "./actions";
@@ -34,9 +35,10 @@ export default async function ProjectPage({
   // Supabase is in a different region, so each call is a slow round trip.
   // These two don't depend on each other, so ask for them at the same
   // time instead of waiting for one before starting the other.
-  const [{ data: project }, branches] = await Promise.all([
+  const [{ data: project }, branches, changeRequests] = await Promise.all([
     supabase.from("projects").select("name").eq("id", id).single(),
     listBranches(supabase, id),
+    listChangeRequests(supabase, id),
   ]);
 
   // listBranches already returned every version, so pick the final one
@@ -49,6 +51,13 @@ export default async function ProjectPage({
 
   const copies = branches.filter((branch) => !branch.isFinal);
   const files = await listBranchFilesWithUrls(supabase, id, final.id);
+
+  const pending = changeRequests.filter(
+    (request) => request.status === "pending",
+  );
+  const branchNameById = new Map(
+    branches.map((branch) => [branch.id, branch.name]),
+  );
 
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-8 px-4 py-16">
@@ -99,6 +108,30 @@ export default async function ProjectPage({
             Upload
           </button>
         </form>
+      </section>
+
+      <section className="flex flex-col gap-3 border-t pt-6">
+        <h2 className="font-medium">Waiting for someone to say yes</h2>
+
+        {pending.length === 0 ? (
+          <p className="text-sm text-zinc-600">
+            Nothing is waiting to be added in.
+          </p>
+        ) : (
+          <ul className="flex flex-col gap-1">
+            {pending.map((request) => (
+              <li key={request.id} className="text-sm">
+                <Link
+                  href={`/projects/${id}/copies/${request.sourceBranchId}`}
+                  className="underline"
+                >
+                  {branchNameById.get(request.sourceBranchId) ?? "A copy"}
+                </Link>{" "}
+                <span className="text-zinc-600">wants to be added in</span>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
 
       <section className="flex flex-col gap-3 border-t pt-6">
