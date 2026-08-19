@@ -85,6 +85,16 @@ Because of that, **the app warns you before you'd erase somebody's work**: if a 
 
 ---
 
+## Tests
+
+Run `npm test`. There are 17, and they cover the rules that keep one group's coursework private from another's — an outsider seeing nothing at all, teammates seeing each other, the approval gate refusing self-approval, the deadline closing the final, and the invite link exposing only a project's name.
+
+They run as **real signed-in users**, not as an admin account, because the admin bypasses every security rule and testing through it would prove nothing.
+
+They're also proven to actually catch problems rather than just pass: deliberately weakening one rule so any signed-in person could read every email address made the suite fail on exactly that test. That matters — a test suite that stays green against a broken system is worse than having none, because you'd trust it.
+
+**If you change anything about who can see what, run these first.** Five of the bugs below were found by hand; these exist so the next one isn't.
+
 ## Real bugs found and fixed along the way
 
 Worth knowing about since they weren't obvious and could resurface in similar shapes:
