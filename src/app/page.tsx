@@ -1,6 +1,12 @@
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
 
-export default function Home() {
+export default async function Home() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   return (
     <main className="flex flex-1 flex-col items-center justify-center gap-12 px-4 py-16 text-center">
       <div className="flex max-w-xl flex-col gap-4">
@@ -14,10 +20,10 @@ export default function Home() {
         </p>
         <div className="mt-2 flex justify-center gap-3">
           <Link
-            href="/login"
+            href={user ? "/projects" : "/login"}
             className="rounded bg-black px-4 py-2 text-white"
           >
-            Sign in
+            {user ? "Your projects" : "Get started"}
           </Link>
         </div>
       </div>
