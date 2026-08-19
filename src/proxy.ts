@@ -4,7 +4,7 @@ import { updateSession } from "@/lib/supabase/middleware";
 // Browsers block a website on one origin from calling an API on another
 // origin unless the API explicitly allows it. This lets the frontend
 // (a separate app, a separate origin) call our /api/* routes.
-const allowedOrigin = process.env.FRONTEND_ORIGIN ?? "http://localhost:3001";
+const allowedOrigin = process.env.FRONTEND_ORIGIN ?? "http://localhost:3000";
 
 const corsHeaders = {
   "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",

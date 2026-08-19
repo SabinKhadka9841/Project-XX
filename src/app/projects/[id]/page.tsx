@@ -1,7 +1,15 @@
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { InviteLink } from "./invite-link";
 import { uploadFile } from "./actions";
+
+const EDITABLE_EXTENSIONS = ["doc", "docx", "xls", "xlsx", "ppt", "pptx"];
+
+function isEditable(filename: string) {
+  const extension = filename.split(".").pop()?.toLowerCase();
+  return extension ? EDITABLE_EXTENSIONS.includes(extension) : false;
+}
 
 export default async function ProjectPage({
   params,
@@ -62,7 +70,7 @@ export default async function ProjectPage({
         ) : (
           <ul className="flex flex-col gap-1">
             {files.map((file) => (
-              <li key={file.name}>
+              <li key={file.name} className="flex items-center gap-3">
                 <a
                   href={file.url}
                   className="text-sm underline"
@@ -71,6 +79,14 @@ export default async function ProjectPage({
                 >
                   {file.name}
                 </a>
+                {isEditable(file.name) && (
+                  <Link
+                    href={`/projects/${id}/edit?file=${encodeURIComponent(file.name)}`}
+                    className="text-sm text-zinc-600 underline"
+                  >
+                    Open
+                  </Link>
+                )}
               </li>
             ))}
           </ul>

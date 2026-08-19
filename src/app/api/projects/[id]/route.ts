@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import type { ApiError, GetProjectResponse } from "@/shared/types";
 
 export async function GET(
   _request: Request,
@@ -12,7 +13,10 @@ export async function GET(
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json({ error: "Not signed in" }, { status: 401 });
+    return NextResponse.json<ApiError>(
+      { error: "Not signed in" },
+      { status: 401 },
+    );
   }
 
   const { data: project } = await supabase
@@ -22,10 +26,13 @@ export async function GET(
     .single();
 
   if (!project) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json<ApiError>(
+      { error: "Not found" },
+      { status: 404 },
+    );
   }
 
-  return NextResponse.json({
+  return NextResponse.json<GetProjectResponse>({
     id: project.id,
     name: project.name,
     createdAt: project.created_at,

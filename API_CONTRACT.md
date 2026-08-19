@@ -4,8 +4,9 @@ For whoever's wiring the frontend's `lib/api.ts` up to the real backend.
 
 ## Base URL
 
-Local dev: `http://localhost:3000`. Set this as `NEXT_PUBLIC_API_BASE_URL`
-in the frontend's `.env.local`.
+Local dev: `http://localhost:4000` — this is already `lib/api.ts`'s
+default, so no `.env.local` change should even be needed on the
+frontend side.
 
 ## Auth
 
@@ -91,6 +92,15 @@ Invite links are plain page navigations, not something to `fetch()`:
 `{API_BASE_URL}/projects/:id/join`. Link to it directly (`<a href>`),
 same as any other outbound link — the backend handles sign-in and
 adding the person as a member, then lands them back on the project.
+
+## Opening a file in the in-browser editor (not a JSON endpoint)
+
+Also a plain page navigation, not a `fetch()` call:
+`{API_BASE_URL}/projects/:id/edit?file=<filename>`. Only works for
+Word/Excel/PowerPoint files (doc/docx/xls/xlsx/ppt/pptx) — other file
+types should just link to their download URL from `GET /api/projects/:id/files`
+instead. Opens the file live, in-browser, via OnlyOffice; changes save
+back to the project automatically.
 
 ## Not built yet
 
