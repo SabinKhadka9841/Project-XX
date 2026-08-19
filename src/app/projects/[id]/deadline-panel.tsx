@@ -82,11 +82,11 @@ export function DeadlinePanel({
           type="datetime-local"
           name="deadline"
           defaultValue={deadline ? toInputValue(deadline) : ""}
-          className="rounded border px-2 py-1 text-sm"
+          className="rounded border px-2 py-2 text-sm"
         />
         <button
           type="submit"
-          className="rounded border px-3 py-1 text-sm hover:bg-zinc-50"
+          className="rounded border px-3 py-2 text-sm hover:bg-zinc-50"
         >
           {deadline ? "Change" : "Set due date"}
         </button>
@@ -95,7 +95,7 @@ export function DeadlinePanel({
             type="submit"
             name="deadline"
             value=""
-            className="text-sm text-zinc-600 underline"
+            className="-my-1 py-2 text-sm text-zinc-600 underline"
           >
             Remove
           </button>

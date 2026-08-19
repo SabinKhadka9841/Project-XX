@@ -72,7 +72,7 @@ export default async function CopyPage({
           {files.length > 0 && (
             <a
               href={`/projects/${id}/export?branch=${copy.id}`}
-              className="shrink-0 text-sm underline"
+              className="-my-2 shrink-0 py-2 text-sm underline"
             >
               Download all
             </a>
@@ -92,7 +92,7 @@ export default async function CopyPage({
             <li key={file.name} className="flex items-center gap-3">
               <a
                 href={file.url ?? undefined}
-                className="text-sm underline"
+                className="py-2 text-sm underline"
                 target="_blank"
                 rel="noreferrer"
               >
@@ -101,7 +101,7 @@ export default async function CopyPage({
               {isEditable(file.name) && (
                 <Link
                   href={`/projects/${id}/edit?branch=${copy.id}&file=${encodeURIComponent(file.name)}`}
-                  className="text-sm text-zinc-600 underline"
+                  className="py-2 text-sm text-zinc-600 underline"
                 >
                   Open
                 </Link>

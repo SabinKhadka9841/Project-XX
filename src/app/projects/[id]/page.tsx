@@ -106,7 +106,10 @@ export default async function ProjectPage({
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-8 px-4 py-16">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">{project.name}</h1>
-        <Link href={`/projects/${id}/timeline`} className="text-sm underline">
+        <Link
+          href={`/projects/${id}/timeline`}
+          className="-my-2 py-2 text-sm underline"
+        >
           Who did what
         </Link>
       </div>
@@ -128,7 +131,7 @@ export default async function ProjectPage({
           {files.length > 0 && (
             <a
               href={`/projects/${id}/export`}
-              className="text-sm underline"
+              className="-my-2 py-2 text-sm underline"
             >
               Download all
             </a>
@@ -143,7 +146,7 @@ export default async function ProjectPage({
               <li key={file.name} className="flex items-center gap-3">
                 <a
                   href={file.url ?? undefined}
-                  className="text-sm underline"
+                  className="py-2 text-sm underline"
                   target="_blank"
                   rel="noreferrer"
                 >
@@ -152,7 +155,7 @@ export default async function ProjectPage({
                 {isEditable(file.name) && (
                   <Link
                     href={`/projects/${id}/edit?branch=${final.id}&file=${encodeURIComponent(file.name)}`}
-                    className="text-sm text-zinc-600 underline"
+                    className="py-2 text-sm text-zinc-600 underline"
                   >
                     Open
                   </Link>
@@ -220,7 +223,7 @@ export default async function ProjectPage({
                 <span>
                   <Link
                     href={`/projects/${id}/copies/${request.sourceBranchId}`}
-                    className="underline"
+                    className="-my-1 inline-block py-2 underline"
                   >
                     {branchNameById.get(request.sourceBranchId) ?? "A copy"}
                   </Link>{" "}
@@ -275,7 +278,7 @@ export default async function ProjectPage({
               <li key={copy.id}>
                 <Link
                   href={`/projects/${id}/copies/${copy.id}`}
-                  className="text-sm underline"
+                  className="inline-block py-2 text-sm underline"
                 >
                   {copy.name}
                 </Link>

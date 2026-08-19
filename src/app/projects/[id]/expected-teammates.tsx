@@ -45,18 +45,20 @@ export function ExpectedTeammates({
                 )}
               </span>
 
-              <span className="flex shrink-0 items-center gap-2">
+              {/* Generous vertical padding: these were 16px tall, which
+                  on a phone means mis-taps — and one of them deletes. */}
+              <span className="flex shrink-0 items-center gap-3">
                 {!person.hasJoined && (
                   <button
                     onClick={() => copyNudge(person.email)}
-                    className="text-xs underline"
+                    className="-my-1 py-2 text-xs underline"
                   >
                     {nudged === person.email ? "Copied" : "Copy a nudge"}
                   </button>
                 )}
                 <button
                   onClick={() => removeExpectedTeammate(projectId, person.id)}
-                  className="text-xs text-zinc-500 underline"
+                  className="-my-1 py-2 text-xs text-zinc-500 underline"
                   title="Remove from the list"
                 >
                   Remove
@@ -89,11 +91,13 @@ export function ExpectedTeammates({
           type="email"
           name="email"
           placeholder="teammate@uni.edu"
-          className="w-48 rounded border px-2 py-1 text-sm"
+          autoCapitalize="off"
+          spellCheck={false}
+          className="w-48 rounded border px-2 py-2 text-sm"
         />
         <button
           type="submit"
-          className="rounded border px-3 py-1 text-sm hover:bg-zinc-50"
+          className="rounded border px-3 py-2 text-sm hover:bg-zinc-50"
         >
           Add to the list
         </button>

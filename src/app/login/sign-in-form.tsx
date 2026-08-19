@@ -67,10 +67,18 @@ export function SignInForm({
 
   return (
     <form onSubmit={handleSubmit} className="flex w-full flex-col gap-3">
+      {/* autoComplete lets a phone offer the address instead of making
+          someone type it on a phone keyboard, at the exact moment
+          they're deciding whether this is worth the effort.
+          autoCapitalize/spellCheck off because phones helpfully
+          capitalise the first letter and underline the whole thing. */}
       <input
         type="email"
         required
         autoFocus
+        autoComplete="email"
+        autoCapitalize="off"
+        spellCheck={false}
         value={email}
         onChange={(event) => setEmail(event.target.value)}
         placeholder="you@example.com"
