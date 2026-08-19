@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { createHash, createHmac } from "node:crypto";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { OnlyOfficeEditor } from "./onlyoffice-editor";
@@ -23,6 +23,27 @@ const DOCUMENT_TYPE_BY_EXTENSION: Record<string, string> = {
   ppt: "slide",
   pptx: "slide",
 };
+
+function base64url(input: Buffer) {
+  return input
+    .toString("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
+}
+
+// OnlyOffice requires the config we hand its editor to be signed, so it
+// can trust it wasn't tampered with. This is a plain HS256 JWT, signed
+// with the secret OnlyOffice's own Document Server generated.
+function signOnlyOfficeConfig(config: object) {
+  const secret = process.env.ONLYOFFICE_JWT_SECRET!;
+  const header = base64url(Buffer.from(JSON.stringify({ alg: "HS256", typ: "JWT" })));
+  const payload = base64url(Buffer.from(JSON.stringify(config)));
+  const signature = base64url(
+    createHmac("sha256", secret).update(`${header}.${payload}`).digest(),
+  );
+  return `${header}.${payload}.${signature}`;
+}
 
 export default async function EditFilePage({
   params,
@@ -108,13 +129,17 @@ export default async function EditFilePage({
       user: { id: user.id, name: user.email ?? "Unknown" },
     },
   };
+  const signedConfig = { ...config, token: signOnlyOfficeConfig(config) };
 
   return (
     <main className="flex flex-1 flex-col">
       <div className="border-b px-4 py-2 text-sm text-zinc-600">
         {project.name} / {file}
       </div>
-      <OnlyOfficeEditor documentServerUrl={DOCUMENT_SERVER_URL} config={config} />
+      <OnlyOfficeEditor
+        documentServerUrl={DOCUMENT_SERVER_URL}
+        config={signedConfig}
+      />
     </main>
   );
 }
