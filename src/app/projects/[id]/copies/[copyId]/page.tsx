@@ -58,7 +58,17 @@ export default async function CopyPage({
         <Link href={`/projects/${id}`} className="text-sm underline">
           ← {project.name}
         </Link>
-        <h1 className="text-2xl font-semibold">{copy.name}</h1>
+        <div className="flex items-center justify-between gap-3">
+          <h1 className="text-2xl font-semibold">{copy.name}</h1>
+          {files.length > 0 && (
+            <a
+              href={`/projects/${id}/export?branch=${copy.id}`}
+              className="shrink-0 text-sm underline"
+            >
+              Download all
+            </a>
+          )}
+        </div>
         <p className="text-sm text-zinc-600">
           Changes here don&apos;t affect the final until they&apos;re added
           in.

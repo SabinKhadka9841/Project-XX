@@ -84,7 +84,17 @@ export default async function ProjectPage({
       </div>
 
       <section className="flex flex-col gap-3">
-        <h2 className="font-medium">The final</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="font-medium">The final</h2>
+          {files.length > 0 && (
+            <a
+              href={`/projects/${id}/export`}
+              className="text-sm underline"
+            >
+              Download all
+            </a>
+          )}
+        </div>
 
         {files.length === 0 ? (
           <p className="text-sm text-zinc-600">No files yet.</p>
