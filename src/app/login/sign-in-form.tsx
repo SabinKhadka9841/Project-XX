@@ -45,19 +45,32 @@ export function SignInForm({
 
   if (status === "sent") {
     return (
-      <div className="flex flex-col gap-2 rounded border p-4">
-        <p className="font-medium">Check your email</p>
-        <p className="text-sm text-zinc-600">
-          We sent a link to <span className="font-medium">{email}</span>.
-          Click it and you&apos;ll be straight in — there&apos;s no password
-          to make up or remember.
+      <div className="card flex flex-col gap-2 p-5">
+        <div className="flex items-center gap-2">
+          <span className="grid h-6 w-6 place-items-center rounded-full bg-success-soft text-success">
+            <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none">
+              <path
+                d="M3.5 8.5l3 3 6-7"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </span>
+          <p className="font-medium">Check your email</p>
+        </div>
+        <p className="text-sm leading-relaxed text-text-muted">
+          We sent a link to <span className="text-text">{email}</span>. Click
+          it and you&apos;re straight in — there&apos;s no password to make up
+          or remember.
         </p>
-        <p className="text-sm text-zinc-600">
+        <p className="text-sm leading-relaxed text-text-muted">
           Nothing yet? It can take a moment, and it sometimes lands in spam.
         </p>
         <button
           onClick={() => setStatus("idle")}
-          className="self-start text-sm underline"
+          className="btn btn-ghost -ml-3.5 self-start"
         >
           Use a different address
         </button>
@@ -82,19 +95,23 @@ export function SignInForm({
         value={email}
         onChange={(event) => setEmail(event.target.value)}
         placeholder="you@example.com"
-        className="rounded border px-3 py-2"
+        className="field py-2.5"
       />
       <button
         type="submit"
         disabled={status === "sending"}
-        className="rounded bg-black px-3 py-2 text-white disabled:opacity-50"
+        className="btn btn-primary py-2.5"
       >
-        {status === "sending" ? "Sending..." : submitLabel}
+        {status === "sending" ? "Sending…" : submitLabel}
       </button>
-      <p className="text-sm text-zinc-600">
+      <p className="text-sm text-text-subtle">
         No password needed — we email you a link that signs you in.
       </p>
-      {status === "error" && <p className="text-sm text-red-600">{error}</p>}
+      {status === "error" && (
+        <p className="rounded-md border border-danger-border bg-danger-soft px-3 py-2 text-sm text-danger">
+          {error}
+        </p>
+      )}
     </form>
   );
 }

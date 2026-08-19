@@ -29,11 +29,11 @@ export function DeadlinePanel({
   const soon = deadline !== null && isDueSoon(deadline);
 
   return (
-    <section className="flex flex-col gap-3 border-t pt-6">
+    <section className="card flex flex-col gap-3 p-5">
       <h2 className="font-medium">Due date</h2>
 
       {deadline === null ? (
-        <p className="text-sm text-zinc-600">
+        <p className="text-sm leading-relaxed text-text-muted">
           No due date set. Add one and the final locks itself once it
           passes, so nothing changes after you&apos;ve handed it in.
         </p>
@@ -44,10 +44,10 @@ export function DeadlinePanel({
             <span
               className={
                 isLocked
-                  ? "text-zinc-500"
+                  ? "text-text-subtle"
                   : soon
                     ? "font-medium text-red-600"
-                    : "text-zinc-600"
+                    : "text-text-muted"
               }
             >
               — {timeLeftInWords(deadline)}
@@ -55,14 +55,14 @@ export function DeadlinePanel({
           </p>
 
           {isLocked ? (
-            <p className="text-sm text-zinc-600">
+            <p className="text-sm leading-relaxed text-text-muted">
               This is closed. The final can&apos;t be changed any more, and
               nothing new can be added in. Copies still work if you want to
               keep tinkering.
             </p>
           ) : (
             pendingCount > 0 && (
-              <p className="text-sm text-red-600">
+              <p className="rounded-md border border-danger-border bg-danger-soft px-3 py-2 text-sm leading-relaxed text-danger">
                 {pendingCount === 1
                   ? "1 change is still waiting for someone to say yes."
                   : `${pendingCount} changes are still waiting for someone to say yes.`}{" "}
@@ -82,11 +82,11 @@ export function DeadlinePanel({
           type="datetime-local"
           name="deadline"
           defaultValue={deadline ? toInputValue(deadline) : ""}
-          className="rounded border px-2 py-2 text-sm"
+          className="field"
         />
         <button
           type="submit"
-          className="rounded border px-3 py-2 text-sm hover:bg-zinc-50"
+          className="btn btn-secondary"
         >
           {deadline ? "Change" : "Set due date"}
         </button>
@@ -95,7 +95,7 @@ export function DeadlinePanel({
             type="submit"
             name="deadline"
             value=""
-            className="-my-1 py-2 text-sm text-zinc-600 underline"
+            className="btn btn-ghost"
           >
             Remove
           </button>

@@ -17,7 +17,7 @@ export function NewProjectButton() {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="rounded bg-black px-3 py-2 text-sm text-white"
+        className="btn btn-primary"
       >
         New project
       </button>
@@ -45,7 +45,7 @@ export function NewProjectButton() {
         value={name}
         onChange={(event) => setName(event.target.value)}
         placeholder="e.g. Biology report"
-        className="w-44 rounded border px-2 py-1 text-sm"
+        className="field w-48"
         onKeyDown={(event) => {
           if (event.key === "Escape") setOpen(false);
         }}
@@ -53,14 +53,14 @@ export function NewProjectButton() {
       <button
         type="submit"
         disabled={pending || name.trim() === ""}
-        className="rounded bg-black px-3 py-1 text-sm text-white disabled:opacity-50"
+        className="btn btn-primary"
       >
         {pending ? "Creating..." : "Create"}
       </button>
       <button
         type="button"
         onClick={() => setOpen(false)}
-        className="text-sm text-zinc-600 underline"
+        className="btn btn-ghost"
       >
         Cancel
       </button>

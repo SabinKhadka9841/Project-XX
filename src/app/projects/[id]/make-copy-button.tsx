@@ -19,7 +19,7 @@ export function MakeCopyButton({ projectId }: { projectId: string }) {
     <button
       onClick={handleClick}
       disabled={pending}
-      className="rounded bg-black px-3 py-2 text-sm text-white disabled:opacity-50"
+      className="btn btn-primary"
     >
       {pending ? "Making a copy..." : "Make my own copy"}
     </button>

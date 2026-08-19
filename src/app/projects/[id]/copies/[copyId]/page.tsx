@@ -62,37 +62,45 @@ export default async function CopyPage({
     : { filenames: [], peopleWhoChangedIt: [] };
 
   return (
-    <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-6 px-4 py-16">
-      <div className="flex flex-col gap-1">
-        <Link href={`/projects/${id}`} className="text-sm underline">
+    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-5 px-4 py-10">
+      <div className="flex flex-col gap-1.5">
+        <Link
+          href={`/projects/${id}`}
+          className="link self-start text-sm text-text-muted"
+        >
           ← {project.name}
         </Link>
         <div className="flex items-center justify-between gap-3">
-          <h1 className="text-2xl font-semibold">{copy.name}</h1>
+          <h1 className="min-w-0 truncate text-2xl font-semibold tracking-tight">
+            {copy.name}
+          </h1>
           {files.length > 0 && (
             <a
               href={`/projects/${id}/export?branch=${copy.id}`}
-              className="-my-2 shrink-0 py-2 text-sm underline"
+              className="btn btn-secondary shrink-0"
             >
               Download all
             </a>
           )}
         </div>
-        <p className="text-sm text-zinc-600">
+        <p className="text-sm text-text-muted">
           Changes here don&apos;t affect the final until they&apos;re added
           in.
         </p>
       </div>
 
       {files.length === 0 ? (
-        <p className="text-sm text-zinc-600">No files yet.</p>
+        <p className="card p-5 text-sm text-text-muted">No files yet.</p>
       ) : (
-        <ul className="flex flex-col gap-1">
+        <ul className="card flex flex-col divide-y divide-border-subtle px-5">
           {files.map((file) => (
-            <li key={file.name} className="flex items-center gap-3">
+            <li
+              key={file.name}
+              className="flex items-center justify-between gap-3"
+            >
               <a
                 href={file.url ?? undefined}
-                className="py-2 text-sm underline"
+                className="link min-w-0 truncate py-2.5 text-sm"
                 target="_blank"
                 rel="noreferrer"
               >
@@ -101,7 +109,7 @@ export default async function CopyPage({
               {isEditable(file.name) && (
                 <Link
                   href={`/projects/${id}/edit?branch=${copy.id}&file=${encodeURIComponent(file.name)}`}
-                  className="py-2 text-sm text-zinc-600 underline"
+                  className="btn btn-ghost shrink-0 py-2.5 text-accent"
                 >
                   Open
                 </Link>
@@ -111,26 +119,31 @@ export default async function CopyPage({
         </ul>
       )}
 
-      <form action={uploadFile.bind(null, id, copy.id)} className="flex gap-2">
-        <input type="file" name="file" required className="flex-1 text-sm" />
-        <button
-          type="submit"
-          className="rounded border px-3 py-2 text-sm hover:bg-zinc-50"
-        >
+      <form
+        action={uploadFile.bind(null, id, copy.id)}
+        className="card flex items-center gap-2 p-5"
+      >
+        <input
+          type="file"
+          name="file"
+          required
+          className="min-w-0 flex-1 text-sm text-text-muted file:mr-3 file:rounded-md file:border-0 file:bg-surface-muted file:px-3 file:py-1.5 file:text-sm file:text-text"
+        />
+        <button type="submit" className="btn btn-secondary">
           Upload
         </button>
       </form>
 
-      <div className="flex flex-col gap-3 border-t pt-6">
+      <div className="card flex flex-col gap-3 p-5">
         <OverwriteWarning risk={risk} viewerEmail={user.email} />
 
         {pendingRequest ? (
-          <p className="text-sm text-zinc-600">
+          <p className="text-sm leading-relaxed text-text-muted">
             {isSolo ? (
               <>
                 Ready to go in. You&apos;re the only person on this project,
                 so add it in yourself from the{" "}
-                <Link href={`/projects/${id}`} className="underline">
+                <Link href={`/projects/${id}`} className="link">
                   project page
                 </Link>
                 .
@@ -144,7 +157,7 @@ export default async function CopyPage({
           </p>
         ) : (
           <div className="flex flex-col gap-2">
-            <p className="text-sm text-zinc-600">
+            <p className="text-sm leading-relaxed text-text-muted">
               {isSolo
                 ? "Happy with these changes? Mark them ready, then add them into the final yourself."
                 : "Happy with these changes? Ask a teammate to add them into the final."}

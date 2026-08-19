@@ -36,19 +36,19 @@ export function DecideButtons({
         <button
           onClick={() => handleClick("approve")}
           disabled={pending !== null}
-          className="rounded bg-black px-2 py-1 text-xs text-white disabled:opacity-50"
+          className="btn btn-primary px-2.5 py-1.5 text-xs"
         >
           {pending === "approve" ? "Adding in..." : "Add it in"}
         </button>
         <button
           onClick={() => handleClick("reject")}
           disabled={pending !== null}
-          className="rounded border px-2 py-1 text-xs hover:bg-zinc-50 disabled:opacity-50"
+          className="btn btn-secondary px-2.5 py-1.5 text-xs"
         >
           {pending === "reject" ? "Saying no..." : "Say no"}
         </button>
       </div>
-      {error && <p className="text-xs text-red-600">{error}</p>}
+      {error && <p className="text-xs text-danger">{error}</p>}
     </div>
   );
 }

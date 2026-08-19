@@ -24,37 +24,37 @@ export function PeoplePanel({
   currentUserId: string;
 }) {
   return (
-    <section className="flex flex-col gap-3 border-t pt-6">
-      <div className="flex items-center justify-between gap-3">
+    <section className="card flex flex-col gap-3 p-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="font-medium">
           People{members.length > 1 ? ` (${members.length})` : ""}
         </h2>
         <InviteLink projectId={projectId} projectName={projectName} />
       </div>
 
-      <ul className="flex flex-col gap-1">
+      <ul className="flex flex-col gap-1.5">
         {members.map((member) => (
           <li key={member.userId} className="text-sm">
             {member.name}
             {member.userId === currentUserId && (
-              <span className="text-zinc-500"> — you</span>
+              <span className="text-text-subtle"> — you</span>
             )}
             {member.role === "owner" && (
-              <span className="text-zinc-500"> · started this project</span>
+              <span className="text-text-subtle"> · started this project</span>
             )}
           </li>
         ))}
       </ul>
 
       {members.length === 1 && expected.length === 0 && (
-        <p className="text-sm text-zinc-600">
+        <p className="text-sm leading-relaxed text-text-muted">
           You&apos;re the only one here so far. Send the invite to your
           group — anyone who hasn&apos;t joined can&apos;t see the work, and
           won&apos;t show up in the record of who did what.
         </p>
       )}
 
-      <div className="border-t pt-3">
+      <div className="border-t border-border-subtle pt-3">
         <h3 className="mb-2 text-sm font-medium">Who you&apos;re expecting</h3>
         <ExpectedTeammates
           projectId={projectId}

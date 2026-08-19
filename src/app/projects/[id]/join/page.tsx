@@ -30,20 +30,23 @@ export default async function JoinProjectPage({
 
     return (
       <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center gap-5 px-4 py-16">
-        <div className="flex flex-col gap-2">
-          <p className="text-sm text-zinc-600">
-            You&apos;ve been invited to a group project
+        <div className="card flex flex-col gap-2 p-5">
+          <p className="text-xs font-medium uppercase tracking-wide text-text-subtle">
+            You&apos;ve been invited to
           </p>
-          <h1 className="text-2xl font-semibold">{projectName}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            {projectName}
+          </h1>
+          <p className="text-sm leading-relaxed text-text-muted">
+            Everyone works on their own copy, and nothing changes the final
+            version until a teammate agrees to it.
+          </p>
         </div>
 
-        <p className="text-sm text-zinc-600">
-          Everyone works on their own copy, and nothing changes the final
-          version until a teammate agrees to it. Put in your email and
-          you&apos;re in.
-        </p>
-
-        <SignInForm next={`/projects/${id}/join`} submitLabel="Join this project" />
+        <SignInForm
+          next={`/projects/${id}/join`}
+          submitLabel="Join this project"
+        />
       </main>
     );
   }

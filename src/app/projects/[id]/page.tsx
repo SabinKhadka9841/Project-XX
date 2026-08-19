@@ -21,6 +21,14 @@ import { uploadFile } from "./actions";
 
 const EDITABLE_EXTENSIONS = ["doc", "docx", "xls", "xlsx", "ppt", "pptx"];
 
+/** Two copies by the same person otherwise look identical. */
+function madeOn(iso: string) {
+  return new Date(iso).toLocaleDateString(undefined, {
+    day: "numeric",
+    month: "short",
+  });
+}
+
 function isEditable(filename: string) {
   const extension = filename.split(".").pop()?.toLowerCase();
   return extension ? EDITABLE_EXTENSIONS.includes(extension) : false;
@@ -103,21 +111,23 @@ export default async function ProjectPage({
   );
 
   return (
-    <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-8 px-4 py-16">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">{project.name}</h1>
+    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-5 px-4 py-10">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-semibold tracking-tight">
+          {project.name}
+        </h1>
         <Link
           href={`/projects/${id}/timeline`}
-          className="-my-2 py-2 text-sm underline"
+          className="btn btn-secondary"
         >
           Who did what
         </Link>
       </div>
 
       {joined === "1" && (
-        <div className="rounded border border-zinc-300 bg-zinc-50 p-4 text-sm">
+        <div className="rounded-card border border-accent bg-accent-soft p-4 text-sm">
           <p className="font-medium">You&apos;re in.</p>
-          <p className="mt-1 text-zinc-600">
+          <p className="mt-1 leading-relaxed text-text-muted">
             To change anything, make your own copy — you can edit it freely
             without touching the final. When you&apos;re happy, ask a
             teammate to add it in.
@@ -125,13 +135,13 @@ export default async function ProjectPage({
         </div>
       )}
 
-      <section className="flex flex-col gap-3">
-        <div className="flex items-center justify-between">
+      <section className="card flex flex-col gap-3 p-5">
+        <div className="flex items-center justify-between gap-3">
           <h2 className="font-medium">The final</h2>
           {files.length > 0 && (
             <a
               href={`/projects/${id}/export`}
-              className="-my-2 py-2 text-sm underline"
+              className="btn btn-ghost -mr-3.5"
             >
               Download all
             </a>
@@ -139,14 +149,17 @@ export default async function ProjectPage({
         </div>
 
         {files.length === 0 ? (
-          <p className="text-sm text-zinc-600">No files yet.</p>
+          <p className="text-sm text-text-muted">Nothing in the final yet.</p>
         ) : (
-          <ul className="flex flex-col gap-1">
+          <ul className="flex flex-col divide-y divide-border-subtle">
             {files.map((file) => (
-              <li key={file.name} className="flex items-center gap-3">
+              <li
+                key={file.name}
+                className="flex items-center justify-between gap-3"
+              >
                 <a
                   href={file.url ?? undefined}
-                  className="py-2 text-sm underline"
+                  className="link min-w-0 truncate py-2.5 text-sm"
                   target="_blank"
                   rel="noreferrer"
                 >
@@ -155,7 +168,7 @@ export default async function ProjectPage({
                 {isEditable(file.name) && (
                   <Link
                     href={`/projects/${id}/edit?branch=${final.id}&file=${encodeURIComponent(file.name)}`}
-                    className="py-2 text-sm text-zinc-600 underline"
+                    className="btn btn-ghost shrink-0 py-2.5 text-accent"
                   >
                     Open
                   </Link>
@@ -166,7 +179,7 @@ export default async function ProjectPage({
         )}
 
         {project.isLocked ? (
-          <p className="text-sm text-zinc-600">
+          <p className="rounded-md bg-surface-muted px-3 py-2 text-sm text-text-muted">
             The due date has passed, so the final is closed to changes.
           </p>
         ) : (
@@ -178,38 +191,20 @@ export default async function ProjectPage({
               type="file"
               name="file"
               required
-              className="flex-1 text-sm"
+              className="min-w-0 flex-1 text-sm text-text-muted file:mr-3 file:rounded-md file:border-0 file:bg-surface-muted file:px-3 file:py-1.5 file:text-sm file:text-text"
             />
-            <button
-              type="submit"
-              className="rounded border px-3 py-2 text-sm hover:bg-zinc-50"
-            >
+            <button type="submit" className="btn btn-secondary">
               Upload
             </button>
           </form>
         )}
       </section>
 
-      <PeoplePanel
-        projectId={id}
-        projectName={project.name}
-        members={members}
-        expected={expected}
-        currentUserId={user.id}
-      />
-
-      <DeadlinePanel
-        projectId={id}
-        deadline={project.deadline}
-        isLocked={project.isLocked}
-        pendingCount={pending.length}
-      />
-
-      <section className="flex flex-col gap-3 border-t pt-6">
+      <section className="card flex flex-col gap-3 p-5">
         <h2 className="font-medium">Waiting for someone to say yes</h2>
 
         {pending.length === 0 ? (
-          <p className="text-sm text-zinc-600">
+          <p className="text-sm text-text-muted">
             Nothing is waiting to be added in.
           </p>
         ) : (
@@ -223,18 +218,18 @@ export default async function ProjectPage({
                 <span>
                   <Link
                     href={`/projects/${id}/copies/${request.sourceBranchId}`}
-                    className="-my-1 inline-block py-2 underline"
+                    className="link -my-1 inline-block py-2"
                   >
                     {branchNameById.get(request.sourceBranchId) ?? "A copy"}
                   </Link>{" "}
-                  <span className="text-zinc-600">wants to be added in</span>
+                  <span className="text-text-muted">wants to be added in</span>
                 </span>
                 {project.isLocked ? (
-                  <span className="shrink-0 text-xs text-zinc-500">
+                  <span className="shrink-0 text-xs text-text-subtle">
                     Closed
                   </span>
                 ) : request.authorId === user.id && !isSolo ? (
-                  <span className="shrink-0 text-xs text-zinc-500">
+                  <span className="shrink-0 text-xs text-text-subtle">
                     Waiting on a teammate
                   </span>
                 ) : (
@@ -259,34 +254,54 @@ export default async function ProjectPage({
         )}
       </section>
 
-      <section className="flex flex-col gap-3 border-t pt-6">
-        <div className="flex items-center justify-between">
+      <section className="card flex flex-col gap-3 p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="font-medium">Copies</h2>
           <MakeCopyButton projectId={id} />
         </div>
 
-        <p className="text-sm text-zinc-600">
+        <p className="text-sm leading-relaxed text-text-muted">
           A copy is yours to change freely. The final above stays exactly as
           it is until your changes are added in.
         </p>
 
         {copies.length === 0 ? (
-          <p className="text-sm text-zinc-600">Nobody has made a copy yet.</p>
+          <p className="text-sm text-text-muted">Nobody has made a copy yet.</p>
         ) : (
-          <ul className="flex flex-col gap-1">
+          <ul className="flex flex-col divide-y divide-border-subtle">
             {copies.map((copy) => (
               <li key={copy.id}>
                 <Link
                   href={`/projects/${id}/copies/${copy.id}`}
-                  className="inline-block py-2 text-sm underline"
+                  className="group flex items-baseline justify-between gap-3 py-2.5"
                 >
-                  {copy.name}
+                  <span className="link min-w-0 truncate text-sm">
+                    {copy.name}
+                  </span>
+                  <span className="shrink-0 text-xs text-text-subtle">
+                    made {madeOn(copy.createdAt)}
+                  </span>
                 </Link>
               </li>
             ))}
           </ul>
         )}
       </section>
+
+      <PeoplePanel
+        projectId={id}
+        projectName={project.name}
+        members={members}
+        expected={expected}
+        currentUserId={user.id}
+      />
+
+      <DeadlinePanel
+        projectId={id}
+        deadline={project.deadline}
+        isLocked={project.isLocked}
+        pendingCount={pending.length}
+      />
     </main>
   );
 }

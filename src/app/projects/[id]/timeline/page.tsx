@@ -53,31 +53,34 @@ export default async function TimelinePage({
   }
 
   return (
-    <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-6 px-4 py-16">
+    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-5 px-4 py-10">
       <div className="flex flex-col gap-1">
-        <Link href={`/projects/${id}`} className="text-sm underline">
+        <Link
+          href={`/projects/${id}`}
+          className="link self-start text-sm text-text-muted"
+        >
           ← {project.name}
         </Link>
-        <h1 className="text-2xl font-semibold">Who did what</h1>
-        <p className="text-sm text-zinc-600">
+        <h1 className="text-2xl font-semibold tracking-tight">Who did what</h1>
+        <p className="text-sm text-text-muted">
           Everything that has happened on this project, most recent first.
         </p>
       </div>
 
       {events.length === 0 ? (
-        <p className="text-sm text-zinc-600">
+        <p className="card p-5 text-sm leading-relaxed text-text-muted">
           Nothing has happened yet. Once someone makes a copy and asks for it
           to be added in, it&apos;ll show up here.
         </p>
       ) : (
-        <ul className="flex flex-col gap-3">
+        <ul className="card flex flex-col divide-y divide-border-subtle px-5">
           {events.map((event) => (
-            <li key={event.id} className="flex flex-col gap-0.5 text-sm">
-              <span>
+            <li key={event.id} className="flex flex-col gap-0.5 py-3.5 text-sm">
+              <span className="leading-relaxed">
                 <span className="font-medium">{event.actorName}</span>{" "}
-                {describe(event)}
+                <span className="text-text-muted">{describe(event)}</span>
               </span>
-              <span className="text-xs text-zinc-500">
+              <span className="text-xs text-text-subtle">
                 {formatWhen(event.at)}
               </span>
             </li>
@@ -85,7 +88,7 @@ export default async function TimelinePage({
         </ul>
       )}
 
-      <p className="border-t pt-4 text-xs text-zinc-500">
+      <p className="text-xs leading-relaxed text-text-subtle">
         This is a record of what happened, not a score. It deliberately
         doesn&apos;t rank anyone or work out percentages — plenty of real
         work (reading, planning, checking someone else&apos;s writing)

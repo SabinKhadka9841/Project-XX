@@ -36,7 +36,7 @@ export function OverwriteWarning({
 
   if (tone === "short") {
     return (
-      <p className="text-xs text-red-600">
+      <p className="text-xs text-danger">
         Heads up: this would undo{" "}
         {onlyYou ? "newer changes already" : `${who}'s changes`} in the final
         to {files}.
@@ -45,8 +45,8 @@ export function OverwriteWarning({
   }
 
   return (
-    <div className="flex flex-col gap-1 rounded border border-red-300 bg-red-50 p-3">
-      <p className="text-sm font-medium text-red-800">
+    <div className="flex flex-col gap-1.5 rounded-card border border-danger-border bg-danger-soft p-4">
+      <p className="text-sm font-medium text-danger">
         {onlyYou
           ? one
             ? "This file has moved on since you copied it"
@@ -55,7 +55,7 @@ export function OverwriteWarning({
             ? "You both changed the same file"
             : "You both changed the same files"}
       </p>
-      <p className="text-sm text-red-800">
+      <p className="text-sm leading-relaxed text-danger">
         {onlyYou ? (
           <>
             <span className="font-medium">{files}</span> changed in the final
@@ -71,7 +71,7 @@ export function OverwriteWarning({
           </>
         )}
       </p>
-      <p className="text-sm text-red-800">
+      <p className="text-sm leading-relaxed text-danger">
         {onlyYou
           ? "If the newer version is the one you want, ignore this copy rather than adding it in."
           : "If you both did real work, open the final's version, put the missing bits into your copy first, then ask again."}

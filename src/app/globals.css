@@ -1,26 +1,205 @@
 @import "tailwindcss";
 
+/*
+ * Design tokens.
+ *
+ * Everything is expressed as a role (surface, border, muted) rather
+ * than a colour name, so dark mode is a matter of redefining a dozen
+ * values here instead of hunting through every component.
+ *
+ * The palette is deliberately calm: this app holds work people are
+ * marked on, and it should feel steady rather than playful. One accent
+ * carries every primary action, so "the blue thing" always means the
+ * same thing.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+  --bg: #f7f8fa;
+  --surface: #ffffff;
+  --surface-muted: #f2f4f7;
+  --border: #e3e6ea;
+  --border-strong: #cfd4da;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --text: #16191d;
+  --text-muted: #5f6771;
+  --text-subtle: #868e99;
+
+  --accent: #3538cd;
+  --accent-hover: #2b2ea8;
+  --accent-fg: #ffffff;
+  --accent-soft: #eef0ff;
+
+  --danger: #b42318;
+  --danger-soft: #fef3f2;
+  --danger-border: #fda29b;
+
+  --success: #067647;
+  --success-soft: #ecfdf3;
+
+  --warning: #b54708;
+  --warning-soft: #fffaeb;
+
+  --radius: 0.625rem;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --bg: #0d0f12;
+    --surface: #16191d;
+    --surface-muted: #1d2126;
+    --border: #282d34;
+    --border-strong: #39404a;
+
+    --text: #f0f2f5;
+    --text-muted: #9aa3ad;
+    --text-subtle: #737c86;
+
+    --accent: #8b8dfa;
+    --accent-hover: #a5a6fb;
+    --accent-fg: #14161f;
+    --accent-soft: #1e2036;
+
+    --danger: #fda29b;
+    --danger-soft: #2c1614;
+    --danger-border: #7a271a;
+
+    --success: #6ce9a6;
+    --success-soft: #0f2b1e;
+
+    --warning: #fec84b;
+    --warning-soft: #2b1f0a;
   }
 }
 
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-border-subtle: var(--border);
+  --color-border-strong: var(--border-strong);
+
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-text-subtle: var(--text-subtle);
+
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-fg: var(--accent-fg);
+  --color-accent-soft: var(--accent-soft);
+
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-border: var(--danger-border);
+
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  --radius-card: var(--radius);
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  /* Was hard-coded to Arial, which silently overrode the Geist font
+     the layout goes to the trouble of loading. */
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Visible keyboard focus everywhere, since the default ring disappears
+   against these surfaces. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@layer components {
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: calc(var(--radius) - 2px);
+    padding: 0.5rem 0.875rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1.25rem;
+    transition: background-color 120ms ease, border-color 120ms ease,
+      opacity 120ms ease;
+    white-space: nowrap;
+  }
+
+  .btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: var(--accent-fg);
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    background: var(--accent-hover);
+  }
+
+  .btn-secondary {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border-strong);
+  }
+
+  .btn-secondary:hover:not(:disabled) {
+    background: var(--surface-muted);
+  }
+
+  .btn-ghost {
+    color: var(--text-muted);
+  }
+
+  .btn-ghost:hover:not(:disabled) {
+    background: var(--surface-muted);
+    color: var(--text);
+  }
+
+  .field {
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: calc(var(--radius) - 2px);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    color: var(--text);
+    transition: border-color 120ms ease;
+  }
+
+  .field::placeholder {
+    color: var(--text-subtle);
+  }
+
+  .field:focus {
+    border-color: var(--accent);
+  }
+
+  .link {
+    color: var(--text);
+    text-decoration: underline;
+    text-decoration-color: var(--border-strong);
+    text-underline-offset: 3px;
+    transition: text-decoration-color 120ms ease;
+  }
+
+  .link:hover {
+    text-decoration-color: var(--accent);
+  }
 }

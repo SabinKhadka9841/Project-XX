@@ -62,18 +62,18 @@ export function OnlyOfficeEditor({
   return (
     <div className="relative h-[85vh] w-full">
       {status !== "ready" && (
-        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-white px-4 text-center">
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2 bg-bg px-4 text-center">
           {status === "loading" ? (
             <>
               <p className="text-sm font-medium">Opening {filename}…</p>
-              <p className="text-sm text-zinc-600">
+              <p className="text-sm text-text-muted">
                 Large documents can take a few seconds to appear.
               </p>
             </>
           ) : (
             <>
               <p className="text-sm font-medium">Couldn&apos;t open this file</p>
-              <p className="text-sm text-zinc-600">{errorMessage}</p>
+              <p className="text-sm text-text-muted">{errorMessage}</p>
             </>
           )}
         </div>

@@ -86,7 +86,7 @@ export default async function EditFilePage({
   if (!documentType) {
     return (
       <main className="flex flex-1 items-center justify-center px-4 text-center">
-        <p className="text-sm text-zinc-600">
+        <p className="text-sm leading-relaxed text-text-muted">
           &quot;{file}&quot; can&apos;t be opened in the in-browser editor
           (only Word, Excel and PowerPoint files can). Download it from the
           project page instead.
@@ -137,7 +137,7 @@ export default async function EditFilePage({
 
   return (
     <main className="flex flex-1 flex-col">
-      <div className="border-b px-4 py-2 text-sm text-zinc-600">
+      <div className="border-b border-border-subtle bg-surface px-4 py-2.5 text-sm text-text-muted">
         {project.name} / {branch.name} / {file}
       </div>
       <OnlyOfficeEditor

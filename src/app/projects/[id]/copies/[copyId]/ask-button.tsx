@@ -31,11 +31,11 @@ export function AskButton({
       <button
         onClick={handleClick}
         disabled={pending}
-        className="rounded bg-black px-3 py-2 text-sm text-white disabled:opacity-50"
+        className="btn btn-primary self-start"
       >
         {pending ? "Asking..." : "Ask to add this in"}
       </button>
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-danger">{error}</p>}
     </div>
   );
 }

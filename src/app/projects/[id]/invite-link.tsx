@@ -28,7 +28,7 @@ export function InviteLink({
   return (
     <button
       onClick={handleClick}
-      className="rounded border px-3 py-2 text-sm hover:bg-zinc-50"
+      className="btn btn-secondary"
       title="Copies a short message with the link, ready to paste into your group chat"
     >
       {copied ? "Copied — paste it in your chat" : "Invite"}

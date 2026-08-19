@@ -36,12 +36,12 @@ export function ExpectedTeammates({
               key={person.id}
               className="flex items-center justify-between gap-3 text-sm"
             >
-              <span className={person.hasJoined ? "" : "text-zinc-600"}>
+              <span className={person.hasJoined ? "" : "text-text-muted"}>
                 {person.email}
                 {person.hasJoined ? (
-                  <span className="text-zinc-500"> — joined</span>
+                  <span className="text-success"> · joined</span>
                 ) : (
-                  <span className="text-red-600"> — not yet</span>
+                  <span className="text-danger"> · not yet</span>
                 )}
               </span>
 
@@ -51,14 +51,14 @@ export function ExpectedTeammates({
                 {!person.hasJoined && (
                   <button
                     onClick={() => copyNudge(person.email)}
-                    className="-my-1 py-2 text-xs underline"
+                    className="btn btn-ghost px-2 py-2 text-xs"
                   >
                     {nudged === person.email ? "Copied" : "Copy a nudge"}
                   </button>
                 )}
                 <button
                   onClick={() => removeExpectedTeammate(projectId, person.id)}
-                  className="-my-1 py-2 text-xs text-zinc-500 underline"
+                  className="btn btn-ghost px-2 py-2 text-xs"
                   title="Remove from the list"
                 >
                   Remove
@@ -70,7 +70,7 @@ export function ExpectedTeammates({
       )}
 
       {missing.length > 0 && (
-        <p className="text-sm text-red-600">
+        <p className="rounded-md border border-danger-border bg-danger-soft px-3 py-2 text-sm leading-relaxed text-danger">
           {missing.length === 1
             ? "1 person hasn't joined yet."
             : `${missing.length} people haven't joined yet.`}{" "}
@@ -93,20 +93,20 @@ export function ExpectedTeammates({
           placeholder="teammate@uni.edu"
           autoCapitalize="off"
           spellCheck={false}
-          className="w-48 rounded border px-2 py-2 text-sm"
+          className="field w-full sm:w-56"
         />
         <button
           type="submit"
-          className="rounded border px-3 py-2 text-sm hover:bg-zinc-50"
+          className="btn btn-secondary"
         >
           Add to the list
         </button>
       </form>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="rounded-md border border-danger-border bg-danger-soft px-3 py-2 text-sm leading-relaxed text-danger">{error}</p>}
 
       {expected.length === 0 && (
-        <p className="text-sm text-zinc-600">
+        <p className="text-sm leading-relaxed text-text-muted">
           Optional: list who&apos;s meant to be in the group, and you&apos;ll
           be able to see at a glance who still hasn&apos;t joined. It
           doesn&apos;t restrict anything — anyone with the link can still
