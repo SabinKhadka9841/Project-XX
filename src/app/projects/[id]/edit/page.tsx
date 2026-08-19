@@ -69,13 +69,12 @@ export default async function EditFilePage({
     redirect("/login");
   }
 
-  const { data: project } = await supabase
-    .from("projects")
-    .select("name")
-    .eq("id", id)
-    .single();
-
-  const branch = await getBranch(supabase, branchId);
+  // Independent lookups, so run them together — each one is a slow
+  // round trip to a Supabase region that isn't nearby.
+  const [{ data: project }, branch] = await Promise.all([
+    supabase.from("projects").select("name").eq("id", id).single(),
+    getBranch(supabase, branchId),
+  ]);
 
   // Guard against a version id from another project being pasted in.
   if (!project || !branch || branch.projectId !== id) {
@@ -99,19 +98,19 @@ export default async function EditFilePage({
   const folder = branchFolder(id, branch.id);
   const filePath = `${folder}/${file}`;
 
-  const { data: signed, error } = await supabase.storage
-    .from("project-files")
-    .createSignedUrl(filePath, 300);
+  // The download link and the file's timestamp don't depend on each
+  // other either, so fetch them at the same time.
+  const [{ data: signed, error }, { data: fileList }] = await Promise.all([
+    supabase.storage.from("project-files").createSignedUrl(filePath, 300),
+    // The timestamp changes each time the file is re-uploaded, so
+    // OnlyOffice can tell a stale cached copy from the current one.
+    supabase.storage.from("project-files").list(folder, { search: file }),
+  ]);
 
   if (error || !signed) {
     notFound();
   }
 
-  // Changes each time the file is re-uploaded, so OnlyOffice knows
-  // when it's looking at a stale cached copy vs. the current one.
-  const { data: fileList } = await supabase.storage
-    .from("project-files")
-    .list(folder, { search: file });
   const lastModified = fileList?.[0]?.updated_at ?? "";
   const documentKey = createHash("sha256")
     .update(`${filePath}:${lastModified}`)

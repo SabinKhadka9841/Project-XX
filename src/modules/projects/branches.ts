@@ -146,6 +146,48 @@ export async function listBranchFiles(
   }));
 }
 
+export interface BranchFileWithUrl extends BranchFile {
+  url: string | null;
+}
+
+/**
+ * Same as listBranchFiles, but also gets a download link for each file.
+ *
+ * Uses createSignedUrls (plural) so a version with ten files costs one
+ * network round trip instead of ten. That matters a lot here: Supabase
+ * is in a different region from most users, so every round trip is
+ * ~200ms of pure waiting.
+ */
+export async function listBranchFilesWithUrls(
+  supabase: SupabaseClient,
+  projectId: string,
+  branchId: string,
+  expiresInSeconds = 60,
+): Promise<BranchFileWithUrl[]> {
+  const files = await listBranchFiles(supabase, projectId, branchId);
+
+  if (files.length === 0) {
+    return [];
+  }
+
+  const folder = branchFolder(projectId, branchId);
+  const { data: signed } = await supabase.storage
+    .from(BUCKET)
+    .createSignedUrls(
+      files.map((file) => `${folder}/${file.name}`),
+      expiresInSeconds,
+    );
+
+  const urlByPath = new Map(
+    (signed ?? []).map((entry) => [entry.path, entry.signedUrl]),
+  );
+
+  return files.map((file) => ({
+    ...file,
+    url: urlByPath.get(`${folder}/${file.name}`) ?? null,
+  }));
+}
+
 /**
  * Make a copy of a version. Every file in the source is duplicated into
  * the new one, so changing a file in the copy can't affect the original.

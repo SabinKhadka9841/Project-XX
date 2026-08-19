@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { branchFolder, getFinalBranch, listBranchFiles, listBranches } from "@/modules/projects/branches";
+import {
+  listBranchFilesWithUrls,
+  listBranches,
+} from "@/modules/projects/branches";
 import { InviteLink } from "./invite-link";
 import { MakeCopyButton } from "./make-copy-button";
 import { uploadFile } from "./actions";
@@ -28,36 +31,24 @@ export default async function ProjectPage({
     redirect("/login");
   }
 
-  const { data: project } = await supabase
-    .from("projects")
-    .select("name")
-    .eq("id", id)
-    .single();
+  // Supabase is in a different region, so each call is a slow round trip.
+  // These two don't depend on each other, so ask for them at the same
+  // time instead of waiting for one before starting the other.
+  const [{ data: project }, branches] = await Promise.all([
+    supabase.from("projects").select("name").eq("id", id).single(),
+    listBranches(supabase, id),
+  ]);
 
-  if (!project) {
+  // listBranches already returned every version, so pick the final one
+  // out of it rather than asking the database a second time.
+  const final = branches.find((branch) => branch.isFinal);
+
+  if (!project || !final) {
     notFound();
   }
 
-  const final = await getFinalBranch(supabase, id);
-
-  if (!final) {
-    notFound();
-  }
-
-  const branches = await listBranches(supabase, id);
   const copies = branches.filter((branch) => !branch.isFinal);
-
-  const storageFiles = await listBranchFiles(supabase, id, final.id);
-  const folder = branchFolder(id, final.id);
-
-  const files = await Promise.all(
-    storageFiles.map(async (file) => {
-      const { data: signed } = await supabase.storage
-        .from("project-files")
-        .createSignedUrl(`${folder}/${file.name}`, 60);
-      return { name: file.name, url: signed?.signedUrl };
-    }),
-  );
+  const files = await listBranchFilesWithUrls(supabase, id, final.id);
 
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-8 px-4 py-16">
@@ -76,7 +67,7 @@ export default async function ProjectPage({
             {files.map((file) => (
               <li key={file.name} className="flex items-center gap-3">
                 <a
-                  href={file.url}
+                  href={file.url ?? undefined}
                   className="text-sm underline"
                   target="_blank"
                   rel="noreferrer"

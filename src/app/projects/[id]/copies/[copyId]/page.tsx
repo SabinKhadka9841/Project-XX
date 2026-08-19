@@ -2,9 +2,8 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import {
-  branchFolder,
   getBranch,
-  listBranchFiles,
+  listBranchFilesWithUrls,
 } from "@/modules/projects/branches";
 import { uploadFile } from "../../actions";
 
@@ -30,30 +29,19 @@ export default async function CopyPage({
     redirect("/login");
   }
 
-  const { data: project } = await supabase
-    .from("projects")
-    .select("name")
-    .eq("id", id)
-    .single();
-
-  const copy = await getBranch(supabase, copyId);
+  // Independent of each other, so fetch both at once rather than waiting
+  // for one round trip to finish before starting the next.
+  const [{ data: project }, copy] = await Promise.all([
+    supabase.from("projects").select("name").eq("id", id).single(),
+    getBranch(supabase, copyId),
+  ]);
 
   // Guard against a copy id from a different project being pasted in.
   if (!project || !copy || copy.projectId !== id || copy.isFinal) {
     notFound();
   }
 
-  const storageFiles = await listBranchFiles(supabase, id, copy.id);
-  const folder = branchFolder(id, copy.id);
-
-  const files = await Promise.all(
-    storageFiles.map(async (file) => {
-      const { data: signed } = await supabase.storage
-        .from("project-files")
-        .createSignedUrl(`${folder}/${file.name}`, 60);
-      return { name: file.name, url: signed?.signedUrl };
-    }),
-  );
+  const files = await listBranchFilesWithUrls(supabase, id, copy.id);
 
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-6 px-4 py-16">
@@ -75,7 +63,7 @@ export default async function CopyPage({
           {files.map((file) => (
             <li key={file.name} className="flex items-center gap-3">
               <a
-                href={file.url}
+                href={file.url ?? undefined}
                 className="text-sm underline"
                 target="_blank"
                 rel="noreferrer"

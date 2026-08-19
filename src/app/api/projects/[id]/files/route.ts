@@ -4,7 +4,7 @@ import {
   branchFolder,
   getBranch,
   getFinalBranch,
-  listBranchFiles,
+  listBranchFilesWithUrls,
 } from "@/modules/projects/branches";
 import type {
   ApiError,
@@ -54,25 +54,16 @@ export async function GET(
     return NextResponse.json<ApiError>({ error: "Not found" }, { status: 404 });
   }
 
-  const storageFiles = await listBranchFiles(supabase, id, branch.id);
-  const folder = branchFolder(id, branch.id);
+  const storageFiles = await listBranchFilesWithUrls(supabase, id, branch.id);
 
-  const files: ListProjectFilesResponse = await Promise.all(
-    storageFiles.map(async (file) => {
-      const { data: signed } = await supabase.storage
-        .from("project-files")
-        .createSignedUrl(`${folder}/${file.name}`, 60);
-
-      return {
-        name: file.name,
-        sizeBytes: file.sizeBytes,
-        lastModified: file.lastModified,
-        url: signed?.signedUrl ?? null,
-        projectId: id,
-        branchId: branch.id,
-      };
-    }),
-  );
+  const files: ListProjectFilesResponse = storageFiles.map((file) => ({
+    name: file.name,
+    sizeBytes: file.sizeBytes,
+    lastModified: file.lastModified,
+    url: file.url,
+    projectId: id,
+    branchId: branch.id,
+  }));
 
   return NextResponse.json<ListProjectFilesResponse>(files);
 }
