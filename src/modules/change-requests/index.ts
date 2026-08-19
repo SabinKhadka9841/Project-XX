@@ -14,6 +14,7 @@ import {
   listBranchFiles,
 } from "@/modules/projects/branches";
 import { isSoloProject } from "@/modules/projects/members";
+import { getProject } from "@/modules/projects/projects";
 
 const BUCKET = "project-files";
 
@@ -218,6 +219,16 @@ export async function approveChangeRequest(
 
   if (request.status !== "pending") {
     throw new ChangeRequestError("This has already been decided.");
+  }
+
+  // Checked before any files move, so a locked project fails cleanly
+  // rather than partway through copying.
+  const project = await getProject(supabase, request.projectId);
+
+  if (project?.isLocked) {
+    throw new ChangeRequestError(
+      "This project is closed — its due date has passed, so nothing more can be added into the final.",
+    );
   }
 
   // Working alone, there's nobody to ask, so approving your own is the

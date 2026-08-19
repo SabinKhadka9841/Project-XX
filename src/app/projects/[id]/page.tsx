@@ -7,6 +7,8 @@ import {
 } from "@/modules/projects/branches";
 import { listChangeRequests } from "@/modules/change-requests";
 import { countMembers } from "@/modules/projects/members";
+import { getProject } from "@/modules/projects/projects";
+import { DeadlinePanel } from "./deadline-panel";
 import { DecideButtons } from "./decide-buttons";
 import { InviteLink } from "./invite-link";
 import { MakeCopyButton } from "./make-copy-button";
@@ -37,13 +39,12 @@ export default async function ProjectPage({
   // Supabase is in a different region, so each call is a slow round trip.
   // These two don't depend on each other, so ask for them at the same
   // time instead of waiting for one before starting the other.
-  const [{ data: project }, branches, changeRequests, memberCount] =
-    await Promise.all([
-      supabase.from("projects").select("name").eq("id", id).single(),
-      listBranches(supabase, id),
-      listChangeRequests(supabase, id),
-      countMembers(supabase, id),
-    ]);
+  const [project, branches, changeRequests, memberCount] = await Promise.all([
+    getProject(supabase, id),
+    listBranches(supabase, id),
+    listChangeRequests(supabase, id),
+    countMembers(supabase, id),
+  ]);
 
   // On your own there's nobody to ask, so you decide your own requests
   // — otherwise a solo project could never change its final at all.
@@ -112,19 +113,37 @@ export default async function ProjectPage({
           </ul>
         )}
 
-        <form
-          action={uploadFile.bind(null, id, final.id)}
-          className="flex gap-2"
-        >
-          <input type="file" name="file" required className="flex-1 text-sm" />
-          <button
-            type="submit"
-            className="rounded border px-3 py-2 text-sm hover:bg-zinc-50"
+        {project.isLocked ? (
+          <p className="text-sm text-zinc-600">
+            The due date has passed, so the final is closed to changes.
+          </p>
+        ) : (
+          <form
+            action={uploadFile.bind(null, id, final.id)}
+            className="flex gap-2"
           >
-            Upload
-          </button>
-        </form>
+            <input
+              type="file"
+              name="file"
+              required
+              className="flex-1 text-sm"
+            />
+            <button
+              type="submit"
+              className="rounded border px-3 py-2 text-sm hover:bg-zinc-50"
+            >
+              Upload
+            </button>
+          </form>
+        )}
       </section>
+
+      <DeadlinePanel
+        projectId={id}
+        deadline={project.deadline}
+        isLocked={project.isLocked}
+        pendingCount={pending.length}
+      />
 
       <section className="flex flex-col gap-3 border-t pt-6">
         <h2 className="font-medium">Waiting for someone to say yes</h2>
@@ -149,7 +168,11 @@ export default async function ProjectPage({
                   </Link>{" "}
                   <span className="text-zinc-600">wants to be added in</span>
                 </span>
-                {request.authorId === user.id && !isSolo ? (
+                {project.isLocked ? (
+                  <span className="shrink-0 text-xs text-zinc-500">
+                    Closed
+                  </span>
+                ) : request.authorId === user.id && !isSolo ? (
                   <span className="shrink-0 text-xs text-zinc-500">
                     Waiting on a teammate
                   </span>

@@ -6,6 +6,7 @@ import {
   getFinalBranch,
   listBranchFilesWithUrls,
 } from "@/modules/projects/branches";
+import { getProject } from "@/modules/projects/projects";
 import type {
   ApiError,
   ListProjectFilesResponse,
@@ -90,6 +91,23 @@ export async function POST(
 
   if (!branch) {
     return NextResponse.json<ApiError>({ error: "Not found" }, { status: 404 });
+  }
+
+  // Checked up front so a locked project gives a readable reason
+  // rather than a raw database error from the policy that also
+  // enforces this.
+  if (branch.isFinal) {
+    const project = await getProject(supabase, id);
+
+    if (project?.isLocked) {
+      return NextResponse.json<ApiError>(
+        {
+          error:
+            "This project is closed — its due date has passed, so the final can't be changed.",
+        },
+        { status: 409 },
+      );
+    }
   }
 
   const formData = await request.formData();

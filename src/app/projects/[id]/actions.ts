@@ -14,6 +14,7 @@ import {
   createChangeRequest,
   rejectChangeRequest,
 } from "@/modules/change-requests";
+import { setDeadline } from "@/modules/projects/projects";
 
 export async function uploadFile(
   projectId: string,
@@ -145,6 +146,39 @@ export async function decideChangeRequest(
     }
     throw error;
   }
+
+  revalidatePath(`/projects/${projectId}`);
+}
+
+/**
+ * Set or clear the project's deadline.
+ *
+ * Takes the value straight from a datetime-local input, which has no
+ * timezone attached — so it's interpreted in the browser's timezone,
+ * which is what someone typing "Friday 5pm" means.
+ */
+export async function updateDeadline(
+  projectId: string,
+  formData: FormData,
+): Promise<void> {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  const raw = formData.get("deadline");
+  const value = typeof raw === "string" && raw.trim() !== "" ? raw : null;
+
+  await setDeadline(
+    supabase,
+    projectId,
+    value === null ? null : new Date(value).toISOString(),
+  );
 
   revalidatePath(`/projects/${projectId}`);
 }
