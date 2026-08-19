@@ -21,7 +21,7 @@ export default async function Home() {
         </h1>
 
         <p className="max-w-xl text-balance text-lg text-text-muted">
-          Everyone works on their own copy. Changes only reach the final
+          Everyone works on their own branch. Changes only reach the final
           when a teammate agrees — so the version you hand in is never a
           surprise.
         </p>
@@ -43,7 +43,7 @@ export default async function Home() {
 
       <div className="grid gap-4 sm:grid-cols-3">
         <Feature title="Nothing gets lost">
-          Edit your own copy as freely as you like. The final stays exactly
+          Edit your own branch as freely as you like. The final stays exactly
           as it is until someone approves your changes.
         </Feature>
         <Feature title="One current version">

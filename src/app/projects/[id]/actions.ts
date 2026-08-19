@@ -63,7 +63,7 @@ export async function makeCopy(projectId: string) {
     supabase,
     projectId,
     final.id,
-    `${user.email ?? "Someone"}'s copy`,
+    `${user.email ?? "Someone"}'s branch`,
     user.id,
   );
 

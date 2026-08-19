@@ -38,7 +38,7 @@ export default async function JoinProjectPage({
             {projectName}
           </h1>
           <p className="text-sm leading-relaxed text-text-muted">
-            Everyone works on their own copy, and nothing changes the final
+            Everyone works on their own branch, and nothing changes the final
             version until a teammate agrees to it.
           </p>
         </div>

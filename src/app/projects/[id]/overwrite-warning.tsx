@@ -49,8 +49,8 @@ export function OverwriteWarning({
       <p className="text-sm font-medium text-danger">
         {onlyYou
           ? one
-            ? "This file has moved on since you copied it"
-            : "These files have moved on since you copied them"
+            ? "This file has moved on since you branched it"
+            : "These files have moved on since you branched them"
           : one
             ? "You both changed the same file"
             : "You both changed the same files"}
@@ -59,13 +59,13 @@ export function OverwriteWarning({
         {onlyYou ? (
           <>
             <span className="font-medium">{files}</span> changed in the final
-            after you made this copy. Adding this in will put your older
+            after you made this branch. Adding this in will put your older
             version back, undoing {one ? "that change" : "those changes"}.
           </>
         ) : (
           <>
             {who} changed <span className="font-medium">{files}</span> in the
-            final after you made this copy. Adding yours in will replace{" "}
+            final after you made this branch. Adding yours in will replace{" "}
             {one ? "it" : "them"} with your version, and their changes to{" "}
             {one ? "that file" : "those files"} will be gone.
           </>
@@ -73,8 +73,8 @@ export function OverwriteWarning({
       </p>
       <p className="text-sm leading-relaxed text-danger">
         {onlyYou
-          ? "If the newer version is the one you want, ignore this copy rather than adding it in."
-          : "If you both did real work, open the final's version, put the missing bits into your copy first, then ask again."}
+          ? "If the newer version is the one you want, ignore this branch rather than adding it in."
+          : "If you both did real work, open the final's version, put the missing bits into your branch first, then ask again."}
       </p>
     </div>
   );

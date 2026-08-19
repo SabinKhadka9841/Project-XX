@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Project Vault",
   description:
-    "One protected final version of your group project. Everyone works on their own copy, and nothing changes until a teammate agrees.",
+    "One protected final version of your group project. Everyone works on their own branch, and nothing changes until a teammate agrees.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

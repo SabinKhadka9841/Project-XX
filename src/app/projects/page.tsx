@@ -49,7 +49,7 @@ export default async function ProjectsPage() {
           <p className="font-medium">Nothing here yet</p>
           <p className="text-sm leading-relaxed text-text-muted">
             Start a project for a group assignment, then send your teammates
-            the invite link. Everyone gets their own copy to work on, and the
+            the invite link. Everyone gets their own branch to work on, and the
             final version only changes when someone agrees to it.
           </p>
           <p className="text-sm leading-relaxed text-text-muted">

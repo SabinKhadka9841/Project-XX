@@ -70,7 +70,7 @@ export async function POST(
     supabase,
     id,
     final.id,
-    `${user.email ?? "Someone"}'s copy`,
+    `${user.email ?? "Someone"}'s branch`,
     user.id,
   );
 

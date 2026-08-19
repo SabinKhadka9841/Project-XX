@@ -7,17 +7,17 @@ import {
 } from "@/modules/attribution";
 
 function describe(event: TimelineEvent) {
-  const copy = event.branchName ?? "a copy";
+  const branch = event.branchName ?? "a branch";
 
   switch (event.type) {
     case "copy_made":
-      return `made ${copy}`;
+      return `made ${branch}`;
     case "asked_to_add_in":
-      return `asked to add ${copy} in`;
+      return `asked to add ${branch} in`;
     case "added_in":
-      return `added ${copy} into the final`;
+      return `added ${branch} into the final`;
     case "said_no":
-      return `said no to ${copy}`;
+      return `said no to ${branch}`;
   }
 }
 
@@ -69,7 +69,7 @@ export default async function TimelinePage({
 
       {events.length === 0 ? (
         <p className="card p-5 text-sm leading-relaxed text-text-muted">
-          Nothing has happened yet. Once someone makes a copy and asks for it
+          Nothing has happened yet. Once someone makes a branch and asks for it
           to be added in, it&apos;ll show up here.
         </p>
       ) : (

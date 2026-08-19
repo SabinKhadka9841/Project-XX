@@ -128,7 +128,7 @@ export default async function ProjectPage({
         <div className="mb-5 rounded-card border border-accent bg-accent-soft p-4 text-sm">
           <p className="font-medium">You&apos;re in.</p>
           <p className="mt-1 leading-relaxed text-text-muted">
-            To change anything, make your own copy — you can edit it freely
+            To change anything, make your own branch — you can edit it freely
             without touching the final. When you&apos;re happy, ask a
             teammate to add it in.
           </p>
@@ -219,7 +219,7 @@ export default async function ProjectPage({
                     href={`/projects/${id}/copies/${request.sourceBranchId}`}
                     className="link -my-1 inline-block py-2"
                   >
-                    {branchNameById.get(request.sourceBranchId) ?? "A copy"}
+                    {branchNameById.get(request.sourceBranchId) ?? "A branch"}
                   </Link>{" "}
                   <span className="text-text-muted">wants to be added in</span>
                 </span>
@@ -255,17 +255,17 @@ export default async function ProjectPage({
 
       <section className="card flex flex-col gap-3 p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="font-medium">Copies</h2>
+          <h2 className="font-medium">Branches</h2>
           <MakeCopyButton projectId={id} />
         </div>
 
         <p className="text-sm leading-relaxed text-text-muted">
-          A copy is yours to change freely. The final above stays exactly as
+          A branch is yours to change freely. The final above stays exactly as
           it is until your changes are added in.
         </p>
 
         {copies.length === 0 ? (
-          <p className="text-sm text-text-muted">Nobody has made a copy yet.</p>
+          <p className="text-sm text-text-muted">Nobody has made a branch yet.</p>
         ) : (
           <ul className="flex flex-col divide-y divide-border-subtle">
             {copies.map((copy) => (

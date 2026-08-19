@@ -21,7 +21,7 @@ export function MakeCopyButton({ projectId }: { projectId: string }) {
       disabled={pending}
       className="btn btn-primary"
     >
-      {pending ? "Making a copy..." : "Make my own copy"}
+      {pending ? "Making a branch..." : "Make my own branch"}
     </button>
   );
 }
