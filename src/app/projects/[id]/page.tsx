@@ -1,6 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { InviteLink } from "./invite-link";
+import { uploadFile } from "./actions";
 
 export default async function ProjectPage({
   params,
@@ -27,10 +28,54 @@ export default async function ProjectPage({
     notFound();
   }
 
+  const { data: storageFiles } = await supabase.storage
+    .from("project-files")
+    .list(id);
+
+  const files = await Promise.all(
+    (storageFiles ?? []).map(async (file) => {
+      const { data: signed } = await supabase.storage
+        .from("project-files")
+        .createSignedUrl(`${id}/${file.name}`, 60);
+      return { name: file.name, url: signed?.signedUrl };
+    }),
+  );
+
   return (
-    <main className="flex flex-1 flex-col items-center justify-center gap-4">
+    <main className="flex flex-1 flex-col items-center gap-6 px-4 py-16">
       <h1 className="text-2xl font-semibold">{project.name}</h1>
       <InviteLink projectId={id} />
+
+      <div className="flex w-full max-w-md flex-col gap-4">
+        <form action={uploadFile.bind(null, id)} className="flex gap-2">
+          <input type="file" name="file" required className="flex-1 text-sm" />
+          <button
+            type="submit"
+            className="rounded border px-3 py-2 text-sm hover:bg-zinc-50"
+          >
+            Upload
+          </button>
+        </form>
+
+        {files.length === 0 ? (
+          <p className="text-sm text-zinc-600">No files yet.</p>
+        ) : (
+          <ul className="flex flex-col gap-1">
+            {files.map((file) => (
+              <li key={file.name}>
+                <a
+                  href={file.url}
+                  className="text-sm underline"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  {file.name}
+                </a>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </main>
   );
 }
