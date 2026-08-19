@@ -48,7 +48,7 @@ Note the practical limit: OnlyOffice Community Edition caps out at **~20 simulta
 
 | Never say | Say instead |
 |---|---|
-| Branch | My copy |
+| ~~Branch~~ | ~~My copy~~ — reversed Aug 2026 at the owner's request: the UI now says **branch**. The rest of this table still stands. |
 | Merge / merge request | Ask to add this in |
 | Main / master | The final |
 | Merge conflict | You both changed page 4 — pick one |
