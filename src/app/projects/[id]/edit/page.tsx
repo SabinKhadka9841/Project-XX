@@ -11,6 +11,9 @@ const DOCUMENT_SERVER_URL = "http://localhost:8080";
 // running Docker." That's how it can call our save-callback endpoint.
 const CALLBACK_HOST = "http://host.docker.internal:4000";
 
+/** Where the browser reaches this app (the editor runs in an iframe). */
+const APP_ORIGIN = "http://localhost:4000";
+
 function fileTypeFor(filename: string) {
   const extension = filename.split(".").pop()?.toLowerCase();
   return extension ?? "";
@@ -119,6 +122,10 @@ export default async function EditFilePage({
 
   const callbackUrl = `${CALLBACK_HOST}/api/onlyoffice/callback?projectId=${id}&branchId=${branch.id}&filename=${encodeURIComponent(file)}`;
 
+  const backTo = branch.isFinal
+    ? `/projects/${id}`
+    : `/projects/${id}/copies/${branch.id}`;
+
   const config = {
     document: {
       fileType: fileTypeFor(file),
@@ -131,6 +138,52 @@ export default async function EditFilePage({
       callbackUrl,
       mode: "edit",
       user: { id: user.id, name: user.email ?? "Unknown" },
+
+      // Strip OnlyOffice's own branding and chrome so what's left is
+      // essentially the document surface, with our interface around it.
+      // These are the keys this version actually reads — checked
+      // against the running container rather than taken from docs for
+      // another release.
+      customization: {
+        // Three options are deliberately absent, and none of it is an
+        // oversight — each one breaks this edition outright:
+        //
+        //   toolbarNoTabs, loaderLogo, loaderName
+        //
+        // Any of them makes api.js append `&indexPostfix=_loader`, so
+        // the iframe loads `index_loader.html` — a file the Community
+        // build does not ship (only index.html exists; checked inside
+        // the container). The result is a 404 where the document should
+        // be. The condition is visible in their own api.js.
+        //
+        // `logo` is out for the same reason via the same code path, so
+        // the ONLYOFFICE mark stays put on this edition. Re-branding is
+        // an Enterprise feature; no config flag gets around a file that
+        // isn't in the image.
+        //
+        // Everything below is what can genuinely be stripped.
+
+        // What was observed on this edition, rather than what the docs
+        // imply: compactHeader and goback take effect. about, leftMenu,
+        // rightMenu and statusBar are accepted without complaint and
+        // then ignored — the panels are all still there. They're left
+        // in because they're harmless and are what we'd want if this
+        // ever moves to an edition that honours them, but don't expect
+        // them to do anything today.
+        compactHeader: true, // works: drops the tall title bar
+        about: false, // ignored on Community
+        leftMenu: false, // ignored on Community
+        rightMenu: false, // ignored on Community
+        statusBar: false, // ignored on Community
+        autosave: true,
+
+        // A back arrow inside the editor, since with the chrome gone
+        // there's otherwise no obvious way out.
+        goback: {
+          text: "Back",
+          url: `${APP_ORIGIN}${backTo}`,
+        },
+      },
     },
   };
   const signedConfig = { ...config, token: signOnlyOfficeConfig(config) };
