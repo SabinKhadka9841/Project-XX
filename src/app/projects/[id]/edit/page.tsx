@@ -1,6 +1,7 @@
 import { createHash, createHmac } from "node:crypto";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { branchFolder, getBranch } from "@/modules/projects/branches";
 import { OnlyOfficeEditor } from "./onlyoffice-editor";
 
 const DOCUMENT_SERVER_URL = "http://localhost:8080";
@@ -50,12 +51,12 @@ export default async function EditFilePage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ file?: string }>;
+  searchParams: Promise<{ file?: string; branch?: string }>;
 }) {
   const { id } = await params;
-  const { file } = await searchParams;
+  const { file, branch: branchId } = await searchParams;
 
-  if (!file) {
+  if (!file || !branchId) {
     notFound();
   }
 
@@ -74,7 +75,10 @@ export default async function EditFilePage({
     .eq("id", id)
     .single();
 
-  if (!project) {
+  const branch = await getBranch(supabase, branchId);
+
+  // Guard against a version id from another project being pasted in.
+  if (!project || !branch || branch.projectId !== id) {
     notFound();
   }
 
@@ -92,7 +96,8 @@ export default async function EditFilePage({
     );
   }
 
-  const filePath = `${id}/${file}`;
+  const folder = branchFolder(id, branch.id);
+  const filePath = `${folder}/${file}`;
 
   const { data: signed, error } = await supabase.storage
     .from("project-files")
@@ -106,14 +111,14 @@ export default async function EditFilePage({
   // when it's looking at a stale cached copy vs. the current one.
   const { data: fileList } = await supabase.storage
     .from("project-files")
-    .list(id, { search: file });
+    .list(folder, { search: file });
   const lastModified = fileList?.[0]?.updated_at ?? "";
   const documentKey = createHash("sha256")
     .update(`${filePath}:${lastModified}`)
     .digest("hex")
     .slice(0, 32);
 
-  const callbackUrl = `${CALLBACK_HOST}/api/onlyoffice/callback?projectId=${id}&filename=${encodeURIComponent(file)}`;
+  const callbackUrl = `${CALLBACK_HOST}/api/onlyoffice/callback?projectId=${id}&branchId=${branch.id}&filename=${encodeURIComponent(file)}`;
 
   const config = {
     document: {
@@ -134,7 +139,7 @@ export default async function EditFilePage({
   return (
     <main className="flex flex-1 flex-col">
       <div className="border-b px-4 py-2 text-sm text-zinc-600">
-        {project.name} / {file}
+        {project.name} / {branch.name} / {file}
       </div>
       <OnlyOfficeEditor
         documentServerUrl={DOCUMENT_SERVER_URL}

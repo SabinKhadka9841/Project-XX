@@ -1,16 +1,41 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import {
+  branchFolder,
+  getBranch,
+  getFinalBranch,
+  listBranchFiles,
+} from "@/modules/projects/branches";
 import type {
   ApiError,
   ListProjectFilesResponse,
   UploadProjectFileResponse,
 } from "@/shared/types";
 
+/**
+ * Resolves which version to act on: ?branchId=... if given, otherwise the
+ * project's final version. Returns null if the id doesn't belong to this
+ * project, so a version id from someone else's project can't be used.
+ */
+async function resolveBranch(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  projectId: string,
+  branchId: string | null,
+) {
+  if (!branchId) {
+    return await getFinalBranch(supabase, projectId);
+  }
+
+  const branch = await getBranch(supabase, branchId);
+  return branch && branch.projectId === projectId ? branch : null;
+}
+
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
+  const branchId = new URL(request.url).searchParams.get("branchId");
   const supabase = await createClient();
   const {
     data: { user },
@@ -23,29 +48,28 @@ export async function GET(
     );
   }
 
-  const { data: storageFiles, error } = await supabase.storage
-    .from("project-files")
-    .list(id);
+  const branch = await resolveBranch(supabase, id, branchId);
 
-  if (error) {
-    return NextResponse.json<ApiError>(
-      { error: error.message },
-      { status: 500 },
-    );
+  if (!branch) {
+    return NextResponse.json<ApiError>({ error: "Not found" }, { status: 404 });
   }
 
+  const storageFiles = await listBranchFiles(supabase, id, branch.id);
+  const folder = branchFolder(id, branch.id);
+
   const files: ListProjectFilesResponse = await Promise.all(
-    (storageFiles ?? []).map(async (file) => {
+    storageFiles.map(async (file) => {
       const { data: signed } = await supabase.storage
         .from("project-files")
-        .createSignedUrl(`${id}/${file.name}`, 60);
+        .createSignedUrl(`${folder}/${file.name}`, 60);
 
       return {
         name: file.name,
-        sizeBytes: file.metadata?.size ?? 0,
-        lastModified: file.updated_at ?? file.created_at,
+        sizeBytes: file.sizeBytes,
+        lastModified: file.lastModified,
         url: signed?.signedUrl ?? null,
         projectId: id,
+        branchId: branch.id,
       };
     }),
   );
@@ -58,6 +82,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
+  const branchId = new URL(request.url).searchParams.get("branchId");
   const supabase = await createClient();
   const {
     data: { user },
@@ -68,6 +93,12 @@ export async function POST(
       { error: "Not signed in" },
       { status: 401 },
     );
+  }
+
+  const branch = await resolveBranch(supabase, id, branchId);
+
+  if (!branch) {
+    return NextResponse.json<ApiError>({ error: "Not found" }, { status: 404 });
   }
 
   const formData = await request.formData();
@@ -82,7 +113,9 @@ export async function POST(
 
   const { error } = await supabase.storage
     .from("project-files")
-    .upload(`${id}/${file.name}`, file, { upsert: true });
+    .upload(`${branchFolder(id, branch.id)}/${file.name}`, file, {
+      upsert: true,
+    });
 
   if (error) {
     return NextResponse.json<ApiError>(
@@ -92,7 +125,12 @@ export async function POST(
   }
 
   return NextResponse.json<UploadProjectFileResponse>(
-    { name: file.name, sizeBytes: file.size, projectId: id },
+    {
+      name: file.name,
+      sizeBytes: file.size,
+      projectId: id,
+      branchId: branch.id,
+    },
     { status: 201 },
   );
 }

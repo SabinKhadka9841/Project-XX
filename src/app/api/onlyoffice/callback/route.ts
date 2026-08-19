@@ -16,9 +16,10 @@ function supabaseAdmin() {
 export async function POST(request: Request) {
   const { searchParams } = new URL(request.url);
   const projectId = searchParams.get("projectId");
+  const branchId = searchParams.get("branchId");
   const filename = searchParams.get("filename");
 
-  if (!projectId || !filename) {
+  if (!projectId || !branchId || !filename) {
     return NextResponse.json({ error: 1 });
   }
 
@@ -38,7 +39,9 @@ export async function POST(request: Request) {
 
     const { error } = await supabaseAdmin()
       .storage.from("project-files")
-      .upload(`${projectId}/${filename}`, fileBlob, { upsert: true });
+      .upload(`${projectId}/${branchId}/${filename}`, fileBlob, {
+        upsert: true,
+      });
 
     if (error) {
       return NextResponse.json({ error: 1 });

@@ -1,0 +1,109 @@
+import Link from "next/link";
+import { notFound, redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import {
+  branchFolder,
+  getBranch,
+  listBranchFiles,
+} from "@/modules/projects/branches";
+import { uploadFile } from "../../actions";
+
+const EDITABLE_EXTENSIONS = ["doc", "docx", "xls", "xlsx", "ppt", "pptx"];
+
+function isEditable(filename: string) {
+  const extension = filename.split(".").pop()?.toLowerCase();
+  return extension ? EDITABLE_EXTENSIONS.includes(extension) : false;
+}
+
+export default async function CopyPage({
+  params,
+}: {
+  params: Promise<{ id: string; copyId: string }>;
+}) {
+  const { id, copyId } = await params;
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  const { data: project } = await supabase
+    .from("projects")
+    .select("name")
+    .eq("id", id)
+    .single();
+
+  const copy = await getBranch(supabase, copyId);
+
+  // Guard against a copy id from a different project being pasted in.
+  if (!project || !copy || copy.projectId !== id || copy.isFinal) {
+    notFound();
+  }
+
+  const storageFiles = await listBranchFiles(supabase, id, copy.id);
+  const folder = branchFolder(id, copy.id);
+
+  const files = await Promise.all(
+    storageFiles.map(async (file) => {
+      const { data: signed } = await supabase.storage
+        .from("project-files")
+        .createSignedUrl(`${folder}/${file.name}`, 60);
+      return { name: file.name, url: signed?.signedUrl };
+    }),
+  );
+
+  return (
+    <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-6 px-4 py-16">
+      <div className="flex flex-col gap-1">
+        <Link href={`/projects/${id}`} className="text-sm underline">
+          ← {project.name}
+        </Link>
+        <h1 className="text-2xl font-semibold">{copy.name}</h1>
+        <p className="text-sm text-zinc-600">
+          Changes here don&apos;t affect the final until they&apos;re added
+          in.
+        </p>
+      </div>
+
+      {files.length === 0 ? (
+        <p className="text-sm text-zinc-600">No files yet.</p>
+      ) : (
+        <ul className="flex flex-col gap-1">
+          {files.map((file) => (
+            <li key={file.name} className="flex items-center gap-3">
+              <a
+                href={file.url}
+                className="text-sm underline"
+                target="_blank"
+                rel="noreferrer"
+              >
+                {file.name}
+              </a>
+              {isEditable(file.name) && (
+                <Link
+                  href={`/projects/${id}/edit?branch=${copy.id}&file=${encodeURIComponent(file.name)}`}
+                  className="text-sm text-zinc-600 underline"
+                >
+                  Open
+                </Link>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <form action={uploadFile.bind(null, id, copy.id)} className="flex gap-2">
+        <input type="file" name="file" required className="flex-1 text-sm" />
+        <button
+          type="submit"
+          className="rounded border px-3 py-2 text-sm hover:bg-zinc-50"
+        >
+          Upload
+        </button>
+      </form>
+    </main>
+  );
+}
