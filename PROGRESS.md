@@ -30,7 +30,10 @@ Every project has one protected **final** version. Anyone can click **"Make my o
 - On the project page, everyone can see what's waiting under **"Waiting for someone to say yes."**
 - Anyone who *isn't* the person who asked can **"Add it in"** or **"Say no."**
 - Approving copies every file from the copy onto the final (whole-file replace — no diffing or merging, deliberately) and only then marks the request approved. Rejecting just marks it rejected; nothing about the files changes.
-- **The person who asked can't decide their own request.** This isn't just hidden in the UI — the database itself refuses the update if you try, confirmed by testing it directly.
+- **The person who asked can't decide their own request** — unless they're the only member of the project. This isn't just hidden in the UI; the database itself refuses the update, confirmed by testing it directly.
+
+### Solo mode
+A project with one member is a personal draft history. The "you can't approve your own work" rule only applies when there's actually somebody else who could — otherwise a person working alone could raise a request that nothing on earth could ever approve, and their final could never change. Alone, you approve your own, and the timeline records plainly that you did both halves.
 
 ### The contribution timeline ("Who did what")
 Every project now has a plain chronological log: who made a copy, who asked for it to be added in, who said yes or no. Reachable from the project page.
@@ -65,7 +68,8 @@ Worth knowing about since they weren't obvious and could resurface in similar sh
 1. **Creating a project used to fail outright.** The code tried to read back the row it had just inserted, but the security rule for "can you see this project" requires being a member — and the membership row didn't exist yet at that exact moment. Fixed by generating the project's ID up front instead of asking the database for it back.
 2. **Invite links never actually worked for a genuinely new person**, only appeared to. The join page checked "does this project exist" using a method only members are allowed to use — so a brand-new person always got a false "not found." Only caught by testing with a real second account instead of assuming it worked because the code looked reasonable.
 3. **Overwriting an existing file was silently broken for real users.** The database had permission rules for creating and viewing files, but not for *replacing* one. It only worked before through the in-editor save button, which uses a special bypass-everything key — a normal member overwriting a file the normal way (exactly what approving a request does) was broken since file upload was first built.
-4. **You couldn't see your own teammates.** The rule for reading membership only ever allowed "your own row," so nothing could list who's in a project — and the contribution timeline showed every reviewer as "Someone who has left," because looking up a teammate's name required reading a membership row it wasn't allowed to see. Fixed so teammates are visible to each other; verified a non-member still sees nothing at all.
+4. **Projects created through the API had no final version.** The screen-based path created one; the API path didn't. Since the API is exactly what the frontend app uses, every project created that way would have been silently unusable — no file uploads, no copies possible — while looking like it worked. Found by testing the API path directly rather than assuming it matched the UI path.
+5. **You couldn't see your own teammates.** The rule for reading membership only ever allowed "your own row," so nothing could list who's in a project — and the contribution timeline showed every reviewer as "Someone who has left," because looking up a teammate's name required reading a membership row it wasn't allowed to see. Fixed so teammates are visible to each other; verified a non-member still sees nothing at all.
 
 None of these were guessed at — each was found by actually driving the app with real accounts and checking the database state before and after, not by reading the code and assuming it was correct.
 
@@ -73,7 +77,7 @@ None of these were guessed at — each was found by actually driving the app wit
 
 ## What's not built yet
 
-- **Solo mode**, deadlines, auto-lock before submission, a pending-approvals countdown, and one-click export are all later-phase items, untouched so far.
+- **Deadlines**, auto-lock before submission, a pending-approvals countdown, and one-click export are all Phase 3, untouched so far.
 - **Attributing file uploads and edits.** Storage doesn't record who put a file where, so those events are absent from the timeline rather than guessed at.
 - **A "who's in this project" list.** The data is readable now, but there's no screen or endpoint for it yet.
 - **Real-time co-editing** exists in the sense that OnlyOffice supports it natively, but hasn't been tested with two people in the same file at once.

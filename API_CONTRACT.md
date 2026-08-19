@@ -44,7 +44,9 @@ List projects the signed-in user is a member of.
 
 ### `POST /api/projects`
 
-Create a project. The creator is automatically added as its `owner`.
+Create a project. The creator is automatically added as its `owner`,
+and the project's protected **final** version is created along with
+it — a project without one can hold no files and can't be copied.
 
 Request body: `{ "name": string }`
 
@@ -137,11 +139,16 @@ Call it "ask to add this in" in the UI, never merge/pull request. A
 pending one reads as "waiting for someone to say yes". Approve reads
 as "add it in"; reject reads as "say no".
 
-**The person who authored a request can't decide it.** Approve/reject
-buttons should only render for someone who isn't the `authorId` — the
-API also enforces this (409) and so does the database (RLS), so this
-isn't just a UI nicety, but hiding the buttons up front is still worth
-doing so people aren't clicking something that's guaranteed to fail.
+**The person who authored a request can't decide it — unless they're
+alone on the project.** Approve/reject buttons should only render for
+someone who isn't the `authorId`, *or* when the project has exactly
+one member. The API enforces this (409) and so does the database
+(RLS), so it isn't just a UI nicety — but hiding the buttons up front
+still matters so people aren't clicking something guaranteed to fail.
+
+The solo exception isn't a loophole, it's necessary: with nobody to
+ask, a solo project could otherwise never change its final at all. The
+timeline still records plainly that the same person did both halves.
 
 ### `GET /api/projects/:id/change-requests`
 
@@ -263,8 +270,6 @@ real accounts.
 
 ## Not built yet
 
-- **Solo mode** — a project with one member reading as a personal
-  draft history rather than a collaboration.
 - **Deadlines**, auto-lock before submission, a countdown of pending
   approvals, and one-click export (all Phase 3).
 - **Attributing file uploads and edits.** Storage doesn't record who
