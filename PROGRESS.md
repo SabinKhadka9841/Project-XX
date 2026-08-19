@@ -4,7 +4,7 @@ For the frontend side of the team — a plain-language walkthrough of everything
 
 ## The headline
 
-**The core loop works end to end.** A person can make their own copy of a project, change it, ask a teammate to add it into the final, and the teammate can say yes or no — with the final only ever changing on approval. That's the actual product idea, and it's been tested with two real accounts, not simulated.
+**The core loop works end to end, and the contribution log with it.** A person can make their own copy of a project, change it, ask a teammate to add it into the final, and the teammate can say yes or no — with the final only ever changing on approval. Every one of those steps is then recorded in a plain "who did what" timeline. That's the actual product idea, tested with two real accounts, not simulated.
 
 Everything below either supports that loop or is infrastructure it depends on.
 
@@ -32,6 +32,15 @@ Every project has one protected **final** version. Anyone can click **"Make my o
 - Approving copies every file from the copy onto the final (whole-file replace — no diffing or merging, deliberately) and only then marks the request approved. Rejecting just marks it rejected; nothing about the files changes.
 - **The person who asked can't decide their own request.** This isn't just hidden in the UI — the database itself refuses the update if you try, confirmed by testing it directly.
 
+### The contribution timeline ("Who did what")
+Every project now has a plain chronological log: who made a copy, who asked for it to be added in, who said yes or no. Reachable from the project page.
+
+This is meant to be the part no competitor has — and it exists because of the approval gate, not as a separate feature bolted on. Because nothing reaches the final without someone approving it, the record of who did what falls out for free.
+
+**It deliberately shows no percentages, no ranking, no "top contributor."** Raw metrics start arguments between teammates and punish whoever did the reading, planning and checking rather than the typing. It's evidence for a conversation, not a verdict. If you build any UI around this, please keep that — it's a product decision, not a styling one.
+
+It also leaves out file uploads and edits, because storage never recorded who put a file there. Showing less beats showing something we'd be guessing at.
+
 ### The backend is a real API, not just pages
 Because the frontend is a separate app, this backend also exposes plain REST endpoints (`/api/projects`, `/api/projects/:id/files`, `/api/projects/:id/copies`, `/api/projects/:id/change-requests`, …) that return JSON instead of HTML. That's what `API_CONTRACT.md` documents in full. There's also a typed contract file (`src/shared/types.ts`) meant to be copied into the frontend repo and kept in sync by hand, since the two repos can't literally share one file yet.
 
@@ -56,6 +65,7 @@ Worth knowing about since they weren't obvious and could resurface in similar sh
 1. **Creating a project used to fail outright.** The code tried to read back the row it had just inserted, but the security rule for "can you see this project" requires being a member — and the membership row didn't exist yet at that exact moment. Fixed by generating the project's ID up front instead of asking the database for it back.
 2. **Invite links never actually worked for a genuinely new person**, only appeared to. The join page checked "does this project exist" using a method only members are allowed to use — so a brand-new person always got a false "not found." Only caught by testing with a real second account instead of assuming it worked because the code looked reasonable.
 3. **Overwriting an existing file was silently broken for real users.** The database had permission rules for creating and viewing files, but not for *replacing* one. It only worked before through the in-editor save button, which uses a special bypass-everything key — a normal member overwriting a file the normal way (exactly what approving a request does) was broken since file upload was first built.
+4. **You couldn't see your own teammates.** The rule for reading membership only ever allowed "your own row," so nothing could list who's in a project — and the contribution timeline showed every reviewer as "Someone who has left," because looking up a teammate's name required reading a membership row it wasn't allowed to see. Fixed so teammates are visible to each other; verified a non-member still sees nothing at all.
 
 None of these were guessed at — each was found by actually driving the app with real accounts and checking the database state before and after, not by reading the code and assuming it was correct.
 
@@ -63,8 +73,9 @@ None of these were guessed at — each was found by actually driving the app wit
 
 ## What's not built yet
 
-- **The contribution log / activity timeline.** This is meant to be the actual differentiator — a chronological record of who proposed what and who approved it, no percentages. It falls out almost for free now that every approval records both the author and the reviewer, but the timeline UI and endpoint don't exist yet.
-- **Solo mode**, deadlines, auto-lock, and export are all later-phase items, untouched so far.
+- **Solo mode**, deadlines, auto-lock before submission, a pending-approvals countdown, and one-click export are all later-phase items, untouched so far.
+- **Attributing file uploads and edits.** Storage doesn't record who put a file where, so those events are absent from the timeline rather than guessed at.
+- **A "who's in this project" list.** The data is readable now, but there's no screen or endpoint for it yet.
 - **Real-time co-editing** exists in the sense that OnlyOffice supports it natively, but hasn't been tested with two people in the same file at once.
 
 ---

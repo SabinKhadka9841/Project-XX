@@ -223,6 +223,37 @@ back to that version automatically.
 Note this needs OnlyOffice's Document Server running in Docker
 locally. See `.env.example` for the one-line command.
 
+## Contribution timeline
+
+### `GET /api/projects/:id/timeline`
+
+A chronological record of who did what, newest first.
+
+```
+200 [{
+  "id": string,
+  "type": "copy_made" | "asked_to_add_in" | "added_in" | "said_no",
+  "at": string,                 // ISO date
+  "actorId": string | null,
+  "actorName": string,          // email, or a fallback if the account is gone
+  "branchId": string | null,
+  "branchName": string | null
+}]
+```
+
+**Present this as a plain list. Never as percentages, a leaderboard,
+a "top contributor", or any score.** This isn't a style preference —
+raw metrics start arguments between teammates and punish whoever did
+the reading, planning and checking rather than the typing. It's
+evidence for a conversation, not a verdict on who worked hardest. The
+page in this repo says as much in its own footer; worth keeping that
+sentiment wherever it appears.
+
+File uploads and edits are deliberately **not** in the timeline:
+storage never recorded who put a file there, so including them would
+mean guessing at attribution. Narrow and correct beats broad and
+sometimes-wrong.
+
 ## Core loop status
 
 Copy → propose → approve is **done end to end** as of this update:
@@ -232,6 +263,14 @@ real accounts.
 
 ## Not built yet
 
-**Activity / the contribution timeline** doesn't exist yet. It falls
-out of change requests now that approvals are recorded (who authored
-it, who reviewed it), so it's the next thing to build, not a redesign.
+- **Solo mode** — a project with one member reading as a personal
+  draft history rather than a collaboration.
+- **Deadlines**, auto-lock before submission, a countdown of pending
+  approvals, and one-click export (all Phase 3).
+- **Attributing file uploads and edits.** Storage doesn't record who
+  put a file where. Fixing it means tracking uploads ourselves, which
+  hasn't been done, so those events are absent from the timeline
+  rather than guessed at.
+- **Listing project members.** The data is now readable (members and
+  profiles are visible to teammates), but there's no endpoint for
+  "who's in this project" yet. Easy to add — ask if you want it.
