@@ -12,6 +12,8 @@ import {
 } from "@/modules/projects/members";
 import { PeoplePanel } from "./people-panel";
 import { getProject } from "@/modules/projects/projects";
+import { findOverwriteRisk } from "@/modules/diffing";
+import { OverwriteWarning } from "./overwrite-warning";
 import { DeadlinePanel } from "./deadline-panel";
 import { DecideButtons } from "./decide-buttons";
 import { MakeCopyButton } from "./make-copy-button";
@@ -71,6 +73,27 @@ export default async function ProjectPage({
     // join the batch above.
     listExpectedTeammates(supabase, id, members),
   ]);
+
+  // For anything waiting, work out whether saying yes would revert a
+  // teammate's work, so the person deciding sees it before they click.
+  const risksByRequestId = new Map(
+    await Promise.all(
+      changeRequests
+        .filter((request) => request.status === "pending")
+        .map(
+          async (request) =>
+            [
+              request.id,
+              await findOverwriteRisk(
+                supabase,
+                id,
+                request.sourceBranchId,
+                final.id,
+              ),
+            ] as const,
+        ),
+    ),
+  );
 
   const pending = changeRequests.filter(
     (request) => request.status === "pending",
@@ -191,8 +214,9 @@ export default async function ProjectPage({
             {pending.map((request) => (
               <li
                 key={request.id}
-                className="flex items-center justify-between gap-3 text-sm"
+                className="flex flex-col gap-1 text-sm"
               >
+                <div className="flex items-center justify-between gap-3">
                 <span>
                   <Link
                     href={`/projects/${id}/copies/${request.sourceBranchId}`}
@@ -212,6 +236,19 @@ export default async function ProjectPage({
                   </span>
                 ) : (
                   <DecideButtons projectId={id} changeRequestId={request.id} />
+                )}
+                </div>
+                {!project.isLocked && (
+                  <OverwriteWarning
+                    risk={
+                      risksByRequestId.get(request.id) ?? {
+                        filenames: [],
+                        peopleWhoChangedIt: [],
+                      }
+                    }
+                    viewerEmail={user.email}
+                    tone="short"
+                  />
                 )}
               </li>
             ))}

@@ -7,6 +7,9 @@ import {
 } from "@/modules/projects/branches";
 import { getPendingRequestForBranch } from "@/modules/change-requests";
 import { countMembers } from "@/modules/projects/members";
+import { getFinalBranch } from "@/modules/projects/branches";
+import { findOverwriteRisk } from "@/modules/diffing";
+import { OverwriteWarning } from "../../overwrite-warning";
 import { uploadFile } from "../../actions";
 import { AskButton } from "./ask-button";
 
@@ -44,13 +47,19 @@ export default async function CopyPage({
     notFound();
   }
 
-  const [files, pendingRequest, memberCount] = await Promise.all([
+  const [files, pendingRequest, memberCount, final] = await Promise.all([
     listBranchFilesWithUrls(supabase, id, copy.id),
     getPendingRequestForBranch(supabase, copy.id),
     countMembers(supabase, id),
+    getFinalBranch(supabase, id),
   ]);
 
   const isSolo = memberCount === 1;
+
+  // Would adding this in quietly revert somebody else's work?
+  const risk = final
+    ? await findOverwriteRisk(supabase, id, copy.id, final.id)
+    : { filenames: [], peopleWhoChangedIt: [] };
 
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-6 px-4 py-16">
@@ -112,7 +121,9 @@ export default async function CopyPage({
         </button>
       </form>
 
-      <div className="border-t pt-6">
+      <div className="flex flex-col gap-3 border-t pt-6">
+        <OverwriteWarning risk={risk} viewerEmail={user.email} />
+
         {pendingRequest ? (
           <p className="text-sm text-zinc-600">
             {isSolo ? (
