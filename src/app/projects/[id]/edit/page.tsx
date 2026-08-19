@@ -143,6 +143,7 @@ export default async function EditFilePage({
       <OnlyOfficeEditor
         documentServerUrl={DOCUMENT_SERVER_URL}
         config={signedConfig}
+        filename={file}
       />
     </main>
   );
