@@ -30,13 +30,17 @@ Every project has a protected final version. Anyone can make a **copy**, change 
 
 ## Locked decisions — do not suggest otherwise
 
-**Monolith, not microservices.** Microservices solve an organisational problem that doesn't exist below ~50 engineers. The only future exception is document processing, which becomes a background worker with a job queue — same repo, separate process.
+**Monolith, not microservices.** Microservices solve an organisational problem that doesn't exist below ~50 engineers. The only exceptions are document processing (a background worker with a job queue, same repo, separate process) and the OnlyOffice Document Server described below — a self-hosted, third-party service, not something we build or maintain code for.
 
-**We do not build our own editor.** Students keep using Word, Google Docs, Canva, Excel. We are a versioning and approval layer on top of the tools they already use. Building an editor is a year of work per format and contradicts the strategy.
+**In-browser editing via a self-hosted, open-source editor (OnlyOffice Docs), not a homegrown one.** Word/Excel/PowerPoint files (docx/xlsx/pptx) can be opened and edited live, in-browser, inside your copy of a project, using the OnlyOffice Document Server (Community Edition, self-hosted in Docker). We are not writing editor code ourselves — OnlyOffice is a mature open-source project that already round-trips these formats with far higher fidelity than we could build. File types OnlyOffice doesn't handle (Canva exports, PDFs, images) stay upload/download only, edited in whatever tool the student already uses.
+
+Editing still happens inside a **copy**, never the final — OnlyOffice is the editing surface, not a replacement for the copy → propose → approve mechanism. Two people can now genuinely co-edit live, but only if they're both editing the *same copy* at the same time; the final stays protected and untouched until someone approves a proposal, exactly as before. This does not reopen "no sophisticated merging" — merging is still whole-file propose-and-replace between copies, OnlyOffice's real-time layer only applies to simultaneous editors of one copy.
+
+Note the practical limit: OnlyOffice Community Edition caps out at **~20 simultaneous editing connections** per document server. Fine for a pilot; revisit (paid tier, or scaling the container) only if that ever becomes the actual bottleneck.
 
 **No sophisticated merging in v1.** Whole-file propose-and-replace only. If two people copy the same project at once, one set of changes is discarded — show a plain warning, don't engineer around it yet.
 
-**Never convert file formats.** Original bytes are always the source of truth. Round-tripping docx → our format → docx destroys footnotes, tracked changes, page breaks and embedded charts. Coursework has strict formatting requirements.
+**Never convert file formats.** Original bytes are always the source of truth. Round-tripping docx → our format → docx destroys footnotes, tracked changes, page breaks and embedded charts. Coursework has strict formatting requirements. (OnlyOffice editing doesn't violate this — it opens and saves genuine docx/xlsx/pptx bytes directly, with no custom intermediate format of ours in between.)
 
 **Not building:** chat, calendars, task boards, notes, study tools. Each competes with a category leader students already use.
 
@@ -62,6 +66,7 @@ Every project has a protected final version. Anyone can make a **copy**, change 
 | Database | Supabase (Postgres) |
 | Auth | Supabase Auth, magic links |
 | File storage | Supabase Storage for now; Cloudflare R2 later (zero egress fees — S3 would be too expensive for a download-heavy product) |
+| In-browser editing | OnlyOffice Docs, Community Edition, self-hosted via Docker (docx/xlsx/pptx only) |
 | Hosting | Vercel |
 | Package manager | npm |
 
@@ -133,7 +138,7 @@ Modular monolith — organise by domain, not by technical layer:
 
 **Phase 0 — foundation.** Next.js scaffold → Supabase connection → projects table → magic link auth → projects list → file upload.
 
-**Phase 1 — the core loop.** Copy a project → upload a changed file into the copy → request it goes in → approve → final version updates. Plus link-based invites.
+**Phase 1 — the core loop.** Copy a project → change a file in the copy (upload for most formats; open-and-edit in-browser via OnlyOffice for docx/xlsx/pptx) → request it goes in → approve → final version updates. Plus link-based invites. OnlyOffice itself needs to be stood up (Docker, confirmed opening a file) before it's wired into the copy flow — treat that as its own small step, not bundled into a bigger one.
 
 **Phase 2 — the parts nobody else has.** Contribution timeline (chronological log, **never percentages** — raw metrics start fights and punish whoever did research rather than typing). Then solo mode: a project with one member is a personal draft history.
 
