@@ -187,6 +187,15 @@ merging in v1" rule. A file the final has that the copy doesn't (not
 possible right now, since a copy starts as a full duplicate) would be
 left alone, not deleted.
 
+**Because there's no merging, approving can erase a teammate's work.**
+If somebody else's changes landed in the final after this copy was
+made, adding the copy in reverts them. The pages in this repo warn
+about that before you ask and before you approve, naming the affected
+files. The API deliberately does **not** warn — it does what it's told
+— so a frontend building its own approve button should surface the
+same warning rather than letting people find out afterwards. There's
+no endpoint for the check yet; ask if you want one.
+
 The 409 cases, each with a message meant to be shown directly:
 - the request was already decided
 - the signed-in person is the request's own author

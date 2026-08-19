@@ -74,6 +74,8 @@ Because the frontend is a separate app, this backend also exposes plain REST end
 
 **Whole-file replace, not real merging.** If two people changed the same file in different copies, only one can be approved cleanly — there's no line-by-line merge. This is a deliberate v1 simplification, not an oversight.
 
+Because of that, **the app warns you before you'd erase somebody's work**: if a teammate's changes landed in the final after you made your copy, both the copy page and the approve button say so, naming the exact files and what will be lost. It doesn't block — sometimes replacing is what you want — but it never happens silently, which for a tool holding coursework is the part that matters.
+
 **OnlyOffice runs in Docker, locally, separate from the Next.js app.** It needs to be running (`docker start onlyoffice-documentserver`) for the in-browser editor to work. If it's not running, "Open" on a file will fail — that's expected, not a bug to chase.
 
 **The database moved once already.** It started in Seoul, which made every single database call a ~200ms round trip from Australia. It's now in Sydney. If you're setting up your own `.env.local`, use the values in `.env.example` and pick a nearby region if you ever spin up your own Supabase project for testing.
