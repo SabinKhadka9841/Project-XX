@@ -326,7 +326,10 @@ real accounts.
   put a file where. Fixing it means tracking uploads ourselves, which
   hasn't been done, so those events are absent from the timeline
   rather than guessed at.
-- **Tracking who was *invited* but hasn't joined.** Invites are just
-  links, so nothing records that you sent one. You can see who joined,
-  not who ignored it. Worth considering before a pilot, since chasing
-  the last person is exactly what decides the success metric.
+- **Actually sending invite emails.** Invites are copy-paste links.
+  Emailing them would need a mail provider (Resend, SendGrid or
+  similar) with the cost and deliverability decisions that implies —
+  worth a deliberate choice rather than quietly adding one.
+- **Server-side endpoints for the "expecting" list.** It works on the
+  project page but has no `/api/...` route yet, since the frontend
+  hasn't asked for one. Straightforward to add.

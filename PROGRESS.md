@@ -59,7 +59,7 @@ One honest caveat on the lock: any member can change or clear the due date. It's
 The part the plan calls most likely to decide whether this works, since one person saying *"just email it to me"* collapses a whole group back to WhatsApp.
 
 - **Invite links now show what you're joining before asking for anything.** Previously a stranger clicking an invite got an unlabelled email box; now they see the project name, a one-sentence explanation, and sign in on the spot.
-- **You can see who's actually joined.** Directly tied to the success metric — you send a link into a group chat and otherwise have no idea who acted on it.
+- **You can see who's actually joined — and who hasn't.** Directly tied to the success metric. You can optionally note down who's meant to be in the group; the list then marks each person joined or not yet, and offers a nudge message to paste at whoever's missing. It's only a checklist: anyone with the link can still join whether or not they're on it, because making it authoritative would lock out a teammate who used a different email address.
 - **Sensible empty states** — including telling a new person to ask a teammate for their link rather than creating a duplicate project for the same assignment.
 - **Real error and not-found pages**, which say a broken invite link is the likeliest cause, and that nothing saved has been lost.
 
@@ -96,8 +96,8 @@ None of these were guessed at — each was found by actually driving the app wit
 
 ## What's not built yet
 
-- **Knowing who was invited but never joined.** Invites are just links, so nothing records that one was sent. You can see who joined, not who ignored it — and chasing that last person is exactly what the success metric turns on.
-- **Real users.** Nothing here has been used for an actual assignment yet. That's now the most valuable next step, not more features.
+- **Actually emailing invites.** They're copy-paste links right now. Sending real email needs a mail provider, with cost and deliverability decisions attached — worth choosing deliberately rather than adding by default.
+- **Real users.** Nothing here has been used for an actual assignment yet. That's the most valuable next step, and no amount of further building substitutes for it.
 - **Attributing file uploads and edits.** Storage doesn't record who put a file where, so those events are absent from the timeline rather than guessed at.
 - **A "who's in this project" list.** The data is readable now, but there's no screen or endpoint for it yet.
 - **Real-time co-editing** exists in the sense that OnlyOffice supports it natively, but hasn't been tested with two people in the same file at once.
