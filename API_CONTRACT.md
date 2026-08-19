@@ -264,6 +264,24 @@ with a normal `<a href>`; don't `fetch()` it.
 404  { "error": "Not found" }
 ```
 
+## People in a project
+
+### `GET /api/projects/:id/members`
+
+Who's in the project. Only visible to people already in it.
+
+```
+200 [{
+  "userId": string,
+  "role": string,   // "owner" for whoever created it, else "member"
+  "name": string    // email, or a fallback if the account is gone
+}]
+```
+
+Worth surfacing prominently: the measure that decides whether a pilot
+worked is whether *every* member of a group signed up, and this is the
+only way to see who actually did.
+
 ## Contribution timeline
 
 ### `GET /api/projects/:id/timeline`
@@ -308,6 +326,7 @@ real accounts.
   put a file where. Fixing it means tracking uploads ourselves, which
   hasn't been done, so those events are absent from the timeline
   rather than guessed at.
-- **Listing project members.** The data is now readable (members and
-  profiles are visible to teammates), but there's no endpoint for
-  "who's in this project" yet. Easy to add — ask if you want it.
+- **Tracking who was *invited* but hasn't joined.** Invites are just
+  links, so nothing records that you sent one. You can see who joined,
+  not who ignored it. Worth considering before a pilot, since chasing
+  the last person is exactly what decides the success metric.

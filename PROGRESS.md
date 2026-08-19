@@ -55,6 +55,14 @@ As the date approaches, the project page warns in red if changes are still sitti
 
 One honest caveat on the lock: any member can change or clear the due date. It's a guardrail against accidents — opening the wrong file the night before marking — not a security control. That's the right trade for a group of peers, but worth knowing it's not tamper-proof.
 
+### Onboarding
+The part the plan calls most likely to decide whether this works, since one person saying *"just email it to me"* collapses a whole group back to WhatsApp.
+
+- **Invite links now show what you're joining before asking for anything.** Previously a stranger clicking an invite got an unlabelled email box; now they see the project name, a one-sentence explanation, and sign in on the spot.
+- **You can see who's actually joined.** Directly tied to the success metric — you send a link into a group chat and otherwise have no idea who acted on it.
+- **Sensible empty states** — including telling a new person to ask a teammate for their link rather than creating a duplicate project for the same assignment.
+- **Real error and not-found pages**, which say a broken invite link is the likeliest cause, and that nothing saved has been lost.
+
 ### The backend is a real API, not just pages
 Because the frontend is a separate app, this backend also exposes plain REST endpoints (`/api/projects`, `/api/projects/:id/files`, `/api/projects/:id/copies`, `/api/projects/:id/change-requests`, …) that return JSON instead of HTML. That's what `API_CONTRACT.md` documents in full. There's also a typed contract file (`src/shared/types.ts`) meant to be copied into the frontend repo and kept in sync by hand, since the two repos can't literally share one file yet.
 
@@ -88,7 +96,8 @@ None of these were guessed at — each was found by actually driving the app wit
 
 ## What's not built yet
 
-- **Onboarding friction.** The build plan calls for a full week on this alone before a pilot, and none of it has been done. It's explicitly the thing most likely to decide whether this works, since one person saying "just email it to me" collapses a whole group back to WhatsApp.
+- **Knowing who was invited but never joined.** Invites are just links, so nothing records that one was sent. You can see who joined, not who ignored it — and chasing that last person is exactly what the success metric turns on.
+- **Real users.** Nothing here has been used for an actual assignment yet. That's now the most valuable next step, not more features.
 - **Attributing file uploads and edits.** Storage doesn't record who put a file where, so those events are absent from the timeline rather than guessed at.
 - **A "who's in this project" list.** The data is readable now, but there's no screen or endpoint for it yet.
 - **Real-time co-editing** exists in the sense that OnlyOffice supports it natively, but hasn't been tested with two people in the same file at once.
