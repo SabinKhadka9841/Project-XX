@@ -63,27 +63,69 @@ Request body: `{ "name": string }`
 (404 also covers "exists but you're not a member" — we don't leak
 whether a project exists to non-members.)
 
-### `GET /api/projects/:id/files`
+## Versions: "the final" and "copies"
+
+Files no longer sit loose in a project. Every project has one protected
+**final** version, plus zero or more **copies** that people can change
+freely without affecting the final. Every file therefore belongs to a
+version, and carries its `branchId`.
+
+Never call these branches in the UI — it's "the final" and "my copy".
+
+### `GET /api/projects/:id/copies`
+
+Lists the copies only. The final version isn't a copy, so it isn't in
+this list.
+
+```
+200 [{
+  "id": string,
+  "projectId": string,
+  "name": string,          // e.g. "sam@uni.edu's copy"
+  "createdBy": string | null,   // user id; null if the account was deleted
+  "createdAt": string
+}]
+```
+
+### `POST /api/projects/:id/copies`
+
+Makes a copy of the final version, duplicating all its files. No
+request body — it's always copied from the final, and named after the
+signed-in user.
+
+```
+201 { same shape as above }
+404 { "error": "Not found" }
+```
+
+### `GET /api/projects/:id/files?branchId=<id>`
+
+`branchId` is **optional** — leave it off to get the final version's
+files, or pass a copy's id to get that copy's files.
 
 ```
 200 [{
   "name": string,
   "sizeBytes": number,
-  "lastModified": string,
-  "url": string | null,   // signed download URL, expires after 60s
-  "projectId": string
+  "lastModified": string | null,  // null if storage recorded no timestamp
+  "url": string | null,           // signed download URL, expires after 60s
+  "projectId": string,
+  "branchId": string              // which version this file belongs to
 }]
+404 { "error": "Not found" }      // branchId isn't part of this project
 ```
 
-### `POST /api/projects/:id/files`
+### `POST /api/projects/:id/files?branchId=<id>`
 
-Request body: `multipart/form-data` with a `file` field. Uploading a
-file with a name that already exists in the project replaces it (no
-version history yet).
+Request body: `multipart/form-data` with a `file` field. `branchId` is
+optional — omit it to upload into the final. Uploading a file whose
+name already exists in that version replaces it (no per-file history
+yet).
 
 ```
-201 { "name": string, "sizeBytes": number, "projectId": string }
+201 { "name": string, "sizeBytes": number, "projectId": string, "branchId": string }
 400 { "error": "Choose a file first." }
+404 { "error": "Not found" }
 ```
 
 ## Joining a project (not a JSON endpoint)
@@ -96,16 +138,22 @@ adding the person as a member, then lands them back on the project.
 ## Opening a file in the in-browser editor (not a JSON endpoint)
 
 Also a plain page navigation, not a `fetch()` call:
-`{API_BASE_URL}/projects/:id/edit?file=<filename>`. Only works for
-Word/Excel/PowerPoint files (doc/docx/xls/xlsx/ppt/pptx) — other file
-types should just link to their download URL from `GET /api/projects/:id/files`
+`{API_BASE_URL}/projects/:id/edit?branch=<branchId>&file=<filename>`.
+Both query parameters are required. Only works for Word/Excel/
+PowerPoint files (doc/docx/xls/xlsx/ppt/pptx) — other file types
+should just link to their download URL from the files endpoint
 instead. Opens the file live, in-browser, via OnlyOffice; changes save
-back to the project automatically.
+back to that version automatically.
+
+Note this needs OnlyOffice's Document Server running in Docker
+locally. See `.env.example` for the one-line command.
 
 ## Not built yet
 
-No endpoints for branches, change requests ("ask to add this in" /
-approve), or activity — those don't exist in the backend yet. They'll
-be added once the copy → propose → approve loop is actually built.
-Don't wire the frontend's branch/merge-request UI to real calls until
-this doc says they exist.
+**Change requests** ("ask to add this in" / approve / reject) and
+**activity** do not exist yet. Copies can be made and edited, but
+there is currently no way to get changes from a copy back into the
+final — that's the next thing being built.
+
+Don't wire the frontend's propose/approve UI to real calls until this
+doc says those endpoints exist.
