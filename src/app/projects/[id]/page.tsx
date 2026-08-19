@@ -111,8 +111,8 @@ export default async function ProjectPage({
   );
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-5 px-4 py-10">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-10">
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold tracking-tight">
           {project.name}
         </h1>
@@ -125,7 +125,7 @@ export default async function ProjectPage({
       </div>
 
       {joined === "1" && (
-        <div className="rounded-card border border-accent bg-accent-soft p-4 text-sm">
+        <div className="mb-5 rounded-card border border-accent bg-accent-soft p-4 text-sm">
           <p className="font-medium">You&apos;re in.</p>
           <p className="mt-1 leading-relaxed text-text-muted">
             To change anything, make your own copy — you can edit it freely
@@ -135,6 +135,8 @@ export default async function ProjectPage({
         </div>
       )}
 
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">
+      <div className="flex flex-col gap-5">
       <section className="card flex flex-col gap-3 p-5">
         <div className="flex items-center justify-between gap-3">
           <h2 className="font-medium">The final</h2>
@@ -153,10 +155,7 @@ export default async function ProjectPage({
         ) : (
           <ul className="flex flex-col divide-y divide-border-subtle">
             {files.map((file) => (
-              <li
-                key={file.name}
-                className="flex items-center justify-between gap-3"
-              >
+              <li key={file.name} className="flex items-center gap-1">
                 <a
                   href={file.url ?? undefined}
                   className="link min-w-0 truncate py-2.5 text-sm"
@@ -273,13 +272,13 @@ export default async function ProjectPage({
               <li key={copy.id}>
                 <Link
                   href={`/projects/${id}/copies/${copy.id}`}
-                  className="group flex items-baseline justify-between gap-3 py-2.5"
+                  className="flex items-baseline gap-2 py-2.5"
                 >
                   <span className="link min-w-0 truncate text-sm">
                     {copy.name}
                   </span>
                   <span className="shrink-0 text-xs text-text-subtle">
-                    made {madeOn(copy.createdAt)}
+                    · {madeOn(copy.createdAt)}
                   </span>
                 </Link>
               </li>
@@ -288,6 +287,9 @@ export default async function ProjectPage({
         )}
       </section>
 
+      </div>
+
+      <aside className="flex flex-col gap-5">
       <PeoplePanel
         projectId={id}
         projectName={project.name}
@@ -302,6 +304,8 @@ export default async function ProjectPage({
         isLocked={project.isLocked}
         pendingCount={pending.length}
       />
+      </aside>
+      </div>
     </main>
   );
 }

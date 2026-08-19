@@ -1,12 +1,18 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
+type Mode = "link" | "password";
+
 /**
- * Shared by the plain login page and the invite landing page, so
- * somebody arriving from an invite never gets bounced to a separate
- * screen that's forgotten why they're here.
+ * Two ways in, because waiting on an email is miserable when you're
+ * testing, and some people simply prefer a password.
+ *
+ * The magic link stays the default: it's the lowest-friction option for
+ * a student joining from a group chat, who won't want to invent a
+ * password to look at one file.
  */
 export function SignInForm({
   next,
@@ -15,15 +21,18 @@ export function SignInForm({
   next: string;
   submitLabel?: string;
 }) {
+  const router = useRouter();
+  const [mode, setMode] = useState<Mode>("link");
   const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">(
+  const [password, setPassword] = useState("");
+  const [status, setStatus] = useState<"idle" | "working" | "sent" | "error">(
     "idle",
   );
   const [error, setError] = useState("");
 
-  async function handleSubmit(event: FormEvent) {
+  async function sendLink(event: FormEvent) {
     event.preventDefault();
-    setStatus("sending");
+    setStatus("working");
     setError("");
 
     const supabase = createClient();
@@ -41,6 +50,49 @@ export function SignInForm({
     }
 
     setStatus("sent");
+  }
+
+  async function withPassword(event: FormEvent) {
+    event.preventDefault();
+    setStatus("working");
+    setError("");
+
+    const supabase = createClient();
+
+    // Try signing in first; if there's no account yet, make one. Saves
+    // a separate "sign up" screen for what is, to the person, one step.
+    const attempt = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (attempt.error) {
+      const created = await supabase.auth.signUp({ email, password });
+
+      if (created.error) {
+        setStatus("error");
+        // The sign-in error is the more useful one: a wrong password on
+        // an existing account fails sign-up with a confusing message.
+        setError(
+          created.error.message.toLowerCase().includes("already")
+            ? "That email already has an account, and that password doesn't match it."
+            : created.error.message,
+        );
+        return;
+      }
+
+      // With email confirmation switched on, signUp returns no session.
+      if (!created.data.session) {
+        setStatus("error");
+        setError(
+          "Account created, but this project requires email confirmation before signing in. Use the emailed link instead, or turn confirmation off in Supabase → Authentication → Sign In / Providers.",
+        );
+        return;
+      }
+    }
+
+    router.replace(next);
+    router.refresh();
   }
 
   if (status === "sent") {
@@ -68,18 +120,32 @@ export function SignInForm({
         <p className="text-sm leading-relaxed text-text-muted">
           Nothing yet? It can take a moment, and it sometimes lands in spam.
         </p>
-        <button
-          onClick={() => setStatus("idle")}
-          className="btn btn-ghost -ml-3.5 self-start"
-        >
-          Use a different address
-        </button>
+        <div className="flex flex-wrap gap-1">
+          <button
+            onClick={() => setStatus("idle")}
+            className="btn btn-ghost -ml-3.5"
+          >
+            Use a different address
+          </button>
+          <button
+            onClick={() => {
+              setStatus("idle");
+              setMode("password");
+            }}
+            className="btn btn-ghost"
+          >
+            Use a password instead
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex w-full flex-col gap-3">
+    <form
+      onSubmit={mode === "link" ? sendLink : withPassword}
+      className="flex w-full flex-col gap-3"
+    >
       {/* autoComplete lets a phone offer the address instead of making
           someone type it on a phone keyboard, at the exact moment
           they're deciding whether this is worth the effort.
@@ -97,18 +163,54 @@ export function SignInForm({
         placeholder="you@example.com"
         className="field py-2.5"
       />
+
+      {mode === "password" && (
+        <input
+          type="password"
+          required
+          minLength={6}
+          autoComplete="current-password"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          placeholder="Password (at least 6 characters)"
+          className="field py-2.5"
+        />
+      )}
+
       <button
         type="submit"
-        disabled={status === "sending"}
+        disabled={status === "working"}
         className="btn btn-primary py-2.5"
       >
-        {status === "sending" ? "Sending…" : submitLabel}
+        {status === "working"
+          ? mode === "link"
+            ? "Sending…"
+            : "Signing in…"
+          : mode === "link"
+            ? submitLabel
+            : "Sign in"}
       </button>
-      <p className="text-sm text-text-subtle">
-        No password needed — we email you a link that signs you in.
-      </p>
+
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-sm text-text-subtle">
+          {mode === "link"
+            ? "No password needed — we email you a link."
+            : "Signs you in, or makes an account if you don't have one."}
+        </p>
+        <button
+          type="button"
+          onClick={() => {
+            setMode(mode === "link" ? "password" : "link");
+            setError("");
+          }}
+          className="btn btn-ghost shrink-0 text-xs"
+        >
+          {mode === "link" ? "Use a password" : "Email me a link"}
+        </button>
+      </div>
+
       {status === "error" && (
-        <p className="rounded-md border border-danger-border bg-danger-soft px-3 py-2 text-sm text-danger">
+        <p className="rounded-md border border-danger-border bg-danger-soft px-3 py-2 text-sm leading-relaxed text-danger">
           {error}
         </p>
       )}

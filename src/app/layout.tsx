@@ -25,7 +25,16 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="flex min-h-full flex-col bg-bg text-text">
+      {/* Browser extensions (Grammarly, password managers) add their own
+          attributes to <body> before React hydrates, which React then
+          reports as a server/client mismatch. It's their markup, not
+          ours, and nothing we render can prevent it — so the warning is
+          suppressed on this element only. Mismatches anywhere else in
+          the app are still reported normally. */}
+      <body
+        suppressHydrationWarning
+        className="flex min-h-full flex-col bg-bg text-text"
+      >
         <SiteHeader />
         {children}
       </body>

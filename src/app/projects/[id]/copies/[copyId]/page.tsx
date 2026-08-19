@@ -62,7 +62,7 @@ export default async function CopyPage({
     : { filenames: [], peopleWhoChangedIt: [] };
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-5 px-4 py-10">
+    <main className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-5 px-4 py-10">
       <div className="flex flex-col gap-1.5">
         <Link
           href={`/projects/${id}`}
@@ -94,10 +94,7 @@ export default async function CopyPage({
       ) : (
         <ul className="card flex flex-col divide-y divide-border-subtle px-5">
           {files.map((file) => (
-            <li
-              key={file.name}
-              className="flex items-center justify-between gap-3"
-            >
+            <li key={file.name} className="flex items-center gap-1">
               <a
                 href={file.url ?? undefined}
                 className="link min-w-0 truncate py-2.5 text-sm"

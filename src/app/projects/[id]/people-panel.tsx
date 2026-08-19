@@ -34,13 +34,21 @@ export function PeoplePanel({
 
       <ul className="flex flex-col gap-1.5">
         {members.map((member) => (
-          <li key={member.userId} className="text-sm">
-            {member.name}
+          <li
+            key={member.userId}
+            className="flex items-baseline gap-1.5 text-sm"
+          >
+            <span className="min-w-0 truncate">{member.name}</span>
             {member.userId === currentUserId && (
-              <span className="text-text-subtle"> — you</span>
+              <span className="shrink-0 text-xs text-text-subtle">you</span>
             )}
             {member.role === "owner" && (
-              <span className="text-text-subtle"> · started this project</span>
+              <span
+                className="shrink-0 rounded-full bg-surface-muted px-1.5 py-0.5 text-xs text-text-subtle"
+                title="Started this project"
+              >
+                owner
+              </span>
             )}
           </li>
         ))}
