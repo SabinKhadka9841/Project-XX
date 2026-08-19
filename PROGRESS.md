@@ -4,6 +4,8 @@ For the frontend side of the team — a plain-language walkthrough of everything
 
 ## The headline
 
+**Phases 0 through 3 of the build plan are complete.** Everything the plan called for before a pilot is built: the core loop, the contribution log, solo mode, deadlines with auto-lock, and one-click export. What's left before a real pilot is onboarding friction, which is deliberate work on making it easy to join — not more features.
+
 **The core loop works end to end, and the contribution log with it.** A person can make their own copy of a project, change it, ask a teammate to add it into the final, and the teammate can say yes or no — with the final only ever changing on approval. Every one of those steps is then recorded in a plain "who did what" timeline. That's the actual product idea, tested with two real accounts, not simulated.
 
 Everything below either supports that loop or is infrastructure it depends on.
@@ -44,6 +46,15 @@ This is meant to be the part no competitor has — and it exists because of the 
 
 It also leaves out file uploads and edits, because storage never recorded who put a file there. Showing less beats showing something we'd be guessing at.
 
+### Deadlines, auto-lock, and export
+A project can have a due date. Once it passes the project **locks**: the final stops accepting changes and nothing more can be added into it, so a submission can't quietly change after it was handed in. Copies stay editable — freezing those would destroy work in progress for no benefit.
+
+As the date approaches, the project page warns in red if changes are still sitting unapproved: *"2 changes are still waiting for someone to say yes. They won't be in the final unless somebody adds them in before the due date."* That's the nudge that stops someone's work being stranded in a copy nobody ever looked at.
+
+**"Download all"** gets the whole final (or any copy) as a single zip, named after the project, ready to hand in.
+
+One honest caveat on the lock: any member can change or clear the due date. It's a guardrail against accidents — opening the wrong file the night before marking — not a security control. That's the right trade for a group of peers, but worth knowing it's not tamper-proof.
+
 ### The backend is a real API, not just pages
 Because the frontend is a separate app, this backend also exposes plain REST endpoints (`/api/projects`, `/api/projects/:id/files`, `/api/projects/:id/copies`, `/api/projects/:id/change-requests`, …) that return JSON instead of HTML. That's what `API_CONTRACT.md` documents in full. There's also a typed contract file (`src/shared/types.ts`) meant to be copied into the frontend repo and kept in sync by hand, since the two repos can't literally share one file yet.
 
@@ -77,7 +88,7 @@ None of these were guessed at — each was found by actually driving the app wit
 
 ## What's not built yet
 
-- **Deadlines**, auto-lock before submission, a pending-approvals countdown, and one-click export are all Phase 3, untouched so far.
+- **Onboarding friction.** The build plan calls for a full week on this alone before a pilot, and none of it has been done. It's explicitly the thing most likely to decide whether this works, since one person saying "just email it to me" collapses a whole group back to WhatsApp.
 - **Attributing file uploads and edits.** Storage doesn't record who put a file where, so those events are absent from the timeline rather than guessed at.
 - **A "who's in this project" list.** The data is readable now, but there's no screen or endpoint for it yet.
 - **Real-time co-editing** exists in the sense that OnlyOffice supports it natively, but hasn't been tested with two people in the same file at once.

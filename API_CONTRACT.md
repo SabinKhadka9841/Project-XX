@@ -230,6 +230,40 @@ back to that version automatically.
 Note this needs OnlyOffice's Document Server running in Docker
 locally. See `.env.example` for the one-line command.
 
+## Deadlines and locking
+
+A project can have a deadline. Once it passes, the project is
+**locked**: the final stops accepting file changes, and change
+requests can no longer be approved. Copies stay fully editable —
+freezing those would just destroy work in progress.
+
+`GET /api/projects/:id` and the projects list don't currently return
+the deadline; the pages read it server-side. Say the word if the
+frontend needs it exposed and it's a small addition.
+
+Locked projects reject writes with **409** and a readable message
+("This project is closed — its due date has passed…"), from both the
+file upload and the approve endpoints.
+
+Worth knowing: any member can set, change, or clear the deadline. The
+lock is a guardrail against accidents — someone opening the wrong file
+the night before marking — not a security control against a determined
+person.
+
+## Exporting
+
+### `GET /projects/:id/export` and `GET /projects/:id/export?branch=<id>`
+
+Not a JSON endpoint — a plain browser navigation that downloads a zip
+of every file in that version. Omit `branch` for the final. Link to it
+with a normal `<a href>`; don't `fetch()` it.
+
+```
+200  application/zip, Content-Disposition attachment
+409  { "error": "There are no files to export yet." }
+404  { "error": "Not found" }
+```
+
 ## Contribution timeline
 
 ### `GET /api/projects/:id/timeline`
@@ -270,8 +304,6 @@ real accounts.
 
 ## Not built yet
 
-- **Deadlines**, auto-lock before submission, a countdown of pending
-  approvals, and one-click export (all Phase 3).
 - **Attributing file uploads and edits.** Storage doesn't record who
   put a file where. Fixing it means tracking uploads ourselves, which
   hasn't been done, so those events are absent from the timeline
