@@ -64,7 +64,15 @@ export default async function ProjectPage({
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-8 px-4 py-16">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">{project.name}</h1>
-        <InviteLink projectId={id} />
+        <div className="flex items-center gap-3">
+          <Link
+            href={`/projects/${id}/timeline`}
+            className="text-sm underline"
+          >
+            Who did what
+          </Link>
+          <InviteLink projectId={id} />
+        </div>
       </div>
 
       <section className="flex flex-col gap-3">

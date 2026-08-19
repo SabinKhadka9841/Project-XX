@@ -139,6 +139,40 @@ export interface DecideChangeRequestRequest {
 }
 export type DecideChangeRequestResponse = ChangeRequest;
 
+// ── Contribution timeline ────────────────────────────────
+//
+// A chronological record of who did what. Present it as a plain list,
+// newest first.
+//
+// IMPORTANT, and not negotiable: never turn this into percentages, a
+// leaderboard, a "top contributor", or any kind of score. Raw metrics
+// start arguments and punish whoever did the reading and thinking
+// rather than the typing. It's evidence for a conversation, not a
+// verdict on who worked hardest.
+
+export type TimelineEventType =
+  | "copy_made"
+  | "asked_to_add_in"
+  | "added_in"
+  | "said_no";
+
+export interface TimelineEvent {
+  id: string;
+  type: TimelineEventType;
+  at: string; // ISO date
+  actorId: string | null;
+  actorName: string; // email, or a fallback if the account is gone
+  branchId: string | null;
+  branchName: string | null;
+}
+
+// GET /api/projects/:id/timeline
+// Newest first. Deliberately excludes file uploads and edits: storage
+// doesn't record who put a file there, so attributing them would mean
+// guessing, and a sometimes-wrong attribution log is worse than a
+// narrow one.
+export type GetTimelineResponse = TimelineEvent[];
+
 // ── Errors ───────────────────────────────────────────────
 
 // Every endpoint above returns this shape on failure. Status codes:
